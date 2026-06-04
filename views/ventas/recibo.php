@@ -1,39 +1,119 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+    <!-- sftp-sync -->
+    <link rel="icon" type="image/png" href="<?= defined('APP_URL') ? APP_URL : '' ?>/img/favicon.png?v=<?= time() ?>">
     <meta charset="UTF-8">
     <title>Recibo #V-<?= $venta['id'] ?></title>
     <style>
-        body { font-family: 'Courier New', Courier, monospace; font-size: 14px; margin: 0; padding: 20px; background: #f0f0f0; }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+
         .ticket {
             background: #fff;
             width: 300px;
             margin: 0 auto;
             padding: 15px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             color: #333;
         }
-        .header { text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px; }
-        .header h2 { margin: 5px 0; text-transform: uppercase; }
-        .info { font-size: 12px; margin-bottom: 10px; }
-        .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .table th { text-align: left; border-bottom: 1px solid #eee; padding: 5px 0; }
-        .table td { padding: 5px 0; vertical-align: top; }
-        .totals { border-top: 1px dashed #ccc; padding-top: 10px; font-weight: bold; }
-        .totals div { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .footer { text-align: center; margin-top: 20px; font-size: 11px; font-style: italic; border-top: 1px solid #eee; padding-top: 10px; }
-        @media print {
-            body { background: none; padding: 0; }
-            .ticket { box-shadow: none; width: 100%; margin: 0; }
-            .no-print { display: none; }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
         }
-        .no-print { text-align: center; margin-bottom: 20px; }
+
+        .header h2 {
+            margin: 5px 0;
+            text-transform: uppercase;
+        }
+
+        .info {
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        .table th {
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            padding: 5px 0;
+        }
+
+        .table td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .totals {
+            border-top: 1px dashed #ccc;
+            padding-top: 10px;
+            font-weight: bold;
+        }
+
+        .totals div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            font-style: italic;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+
+            .ticket {
+                box-shadow: none;
+                width: 100%;
+                margin: 0;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+
+        .no-print {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
         .btn {
-            background: #3b82f6; color: #fff; border: none; padding: 8px 16px;
-            border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 12px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 12px;
         }
     </style>
 </head>
+
 <body>
 
     <div class="no-print">
@@ -65,11 +145,11 @@
             </thead>
             <tbody>
                 <?php foreach ($detalles as $d): ?>
-                <tr>
-                    <td><?= $d['cantidad'] ?>x</td>
-                    <td><?= htmlspecialchars($d['producto']) ?></td>
-                    <td style="text-align:right">$<?= number_format($d['subtotal'], 2) ?></td>
-                </tr>
+                    <tr>
+                        <td><?= $d['cantidad'] ?>x</td>
+                        <td><?= htmlspecialchars($d['producto']) ?></td>
+                        <td style="text-align:right">$<?= number_format($d['subtotal'], 2) ?></td>
+                    </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
@@ -88,10 +168,11 @@
         </div>
 
         <div class="footer">
-            ¡Gracias por preferir Catnis Bakery!<br>
-            🥐🥐🥐
+            Â¡Gracias por preferir Catnis Bakery!<br>
+            ðŸ¥ðŸ¥ðŸ¥
         </div>
     </div>
 
 </body>
+
 </html>

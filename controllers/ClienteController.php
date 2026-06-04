@@ -19,10 +19,12 @@ class ClienteController {
     public function crear(): void {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = [
-                ':nombre'    => trim($_POST['nombre'] ?? ''),
-                ':telefono'  => trim($_POST['telefono'] ?? ''),
-                ':correo'    => trim($_POST['correo'] ?? ''),
-                ':direccion' => trim($_POST['direccion'] ?? ''),
+                ':nombre'             => trim($_POST['nombre'] ?? ''),
+                ':telefono'           => trim($_POST['telefono'] ?? ''),
+                ':correo'             => trim($_POST['correo'] ?? ''),
+                ':direccion'          => trim($_POST['direccion'] ?? ''),
+                ':nombre_mascota'     => trim($_POST['nombre_mascota'] ?? ''),
+                ':cumpleanos_mascota' => !empty($_POST['cumpleanos_mascota']) ? $_POST['cumpleanos_mascota'] : null,
             ];
             if (empty($datos[':nombre'])) {
                 $_SESSION['error'] = 'El nombre es obligatorio.';
@@ -47,10 +49,12 @@ class ClienteController {
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = [
-                ':nombre'    => trim($_POST['nombre'] ?? ''),
-                ':telefono'  => trim($_POST['telefono'] ?? ''),
-                ':correo'    => trim($_POST['correo'] ?? ''),
-                ':direccion' => trim($_POST['direccion'] ?? ''),
+                ':nombre'             => trim($_POST['nombre'] ?? ''),
+                ':telefono'           => trim($_POST['telefono'] ?? ''),
+                ':correo'             => trim($_POST['correo'] ?? ''),
+                ':direccion'          => trim($_POST['direccion'] ?? ''),
+                ':nombre_mascota'     => trim($_POST['nombre_mascota'] ?? ''),
+                ':cumpleanos_mascota' => !empty($_POST['cumpleanos_mascota']) ? $_POST['cumpleanos_mascota'] : null,
             ];
             if ($this->model->actualizar($id, $datos)) {
                 $_SESSION['exito'] = 'Cliente actualizado.';

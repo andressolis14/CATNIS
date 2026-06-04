@@ -81,4 +81,21 @@ class Deuda {
         $stmt->execute([':inicio' => $inicio, ':fin' => $fin . ' 23:59:59', ':metodo' => $metodo]);
         return (float)$stmt->fetchColumn();
     }
+
+    public function totalPendienteRango(string $inicio, string $fin): float {
+        $stmt = $this->db->prepare("SELECT COALESCE(SUM(saldo),0) FROM deudas WHERE estado != 'pagada' AND fecha BETWEEN :inicio AND :fin");
+        $stmt->execute([':inicio' => $inicio, ':fin' => $fin . ' 23:59:59']);
+        return (float)$stmt->fetchColumn();
+    }
+
+    public function pendientesRango(string $inicio, string $fin): array {
+        $stmt = $this->db->prepare("
+            SELECT d.*, c.nombre as cliente
+            FROM deudas d JOIN clientes c ON c.id = d.cliente_id
+            WHERE d.estado != 'pagada' AND d.fecha BETWEEN :inicio AND :fin
+            ORDER BY d.fecha
+        ");
+        $stmt->execute([':inicio' => $inicio, ':fin' => $fin . ' 23:59:59']);
+        return $stmt->fetchAll();
+    }
 }

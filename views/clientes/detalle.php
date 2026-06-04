@@ -21,6 +21,28 @@ require_once APP_ROOT . '/views/layout/header.php';
         <div class="stat-card"><div class="stat-icon icon-amber"><i class="fas fa-shopping-bag"></i></div>
         <div class="stat-label">Total Compras</div><div class="stat-value text-amber"><?= count($historial) ?></div></div>
     </div>
+    
+    <!-- Ficha de la Mascota -->
+    <?php if (!empty($cliente['nombre_mascota'])): ?>
+    <div class="col-md-12 mt-3">
+        <div class="form-card" style="border-left: 4px solid var(--accent);">
+            <div class="d-flex align-items-center">
+                <div class="me-4" style="font-size: 30px; color: var(--accent);">
+                    <i class="fas fa-dog"></i>
+                </div>
+                <div>
+                    <h5 class="mb-1" style="color: var(--accent);">Ficha de Mascota: <?= htmlspecialchars($cliente['nombre_mascota']) ?></h5>
+                    <?php if (!empty($cliente['cumpleanos_mascota'])): ?>
+                        <p class="mb-0 text-muted">
+                            <i class="fas fa-cake-candles me-2 text-pink"></i>
+                            Cumpleaños: <?= date('d/m/Y', strtotime($cliente['cumpleanos_mascota'])) ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <div class="table-card">

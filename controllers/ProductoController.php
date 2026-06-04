@@ -20,13 +20,15 @@ class ProductoController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $imagen = $this->cargarImagen();
             
+            $tipo = $_POST['tipo'] ?? 'producto';
             $datos = [
                 ':nombre'         => trim($_POST['nombre'] ?? ''),
+                ':tipo'           => $tipo,
                 ':descripcion'    => trim($_POST['descripcion'] ?? ''),
-                ':precio_compra'  => (float)($_POST['precio_compra'] ?? 0),
+                ':precio_compra'  => $tipo === 'servicio' ? 0 : (float)($_POST['precio_compra'] ?? 0),
                 ':precio_venta'   => (float)($_POST['precio_venta'] ?? 0),
-                ':stock'          => (int)($_POST['stock'] ?? 0),
-                ':stock_minimo'   => (int)($_POST['stock_minimo'] ?? 5),
+                ':stock'          => $tipo === 'servicio' ? 0 : (int)($_POST['stock'] ?? 0),
+                ':stock_minimo'   => $tipo === 'servicio' ? 0 : (int)($_POST['stock_minimo'] ?? 5),
                 ':imagen'         => $imagen,
             ];
 
@@ -53,13 +55,15 @@ class ProductoController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $tipo = $_POST['tipo'] ?? 'producto';
             $datos = [
                 ':nombre'        => trim($_POST['nombre'] ?? ''),
+                ':tipo'          => $tipo,
                 ':descripcion'   => trim($_POST['descripcion'] ?? ''),
-                ':precio_compra' => (float)($_POST['precio_compra'] ?? 0),
+                ':precio_compra' => $tipo === 'servicio' ? 0 : (float)($_POST['precio_compra'] ?? 0),
                 ':precio_venta'  => (float)($_POST['precio_venta'] ?? 0),
-                ':stock'         => (int)($_POST['stock'] ?? 0),
-                ':stock_minimo'  => (int)($_POST['stock_minimo'] ?? 5),
+                ':stock'         => $tipo === 'servicio' ? 0 : (int)($_POST['stock'] ?? 0),
+                ':stock_minimo'  => $tipo === 'servicio' ? 0 : (int)($_POST['stock_minimo'] ?? 5),
             ];
 
             $nuevaImagen = $this->cargarImagen();

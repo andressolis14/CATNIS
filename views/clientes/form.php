@@ -30,6 +30,22 @@ require_once APP_ROOT . '/views/layout/header.php';
                         <label class="form-label">Dirección</label>
                         <textarea name="direccion" class="form-control" rows="2" placeholder="Dirección opcional..."><?= htmlspecialchars($cliente['direccion'] ?? '') ?></textarea>
                     </div>
+
+                    <!-- Datos de la mascota -->
+                    <div class="col-12 mt-3 mb-1">
+                        <h6 style="color:var(--accent); font-size:14px; border-bottom:1px solid var(--border); padding-bottom:5px;">
+                            <i class="fas fa-paw me-2"></i>Datos de la Mascota (Opcional)
+                        </h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre de la Mascota</label>
+                        <input type="text" name="nombre_mascota" class="form-control" value="<?= htmlspecialchars($cliente['nombre_mascota'] ?? '') ?>" placeholder="Ej: Max, Luna...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Cumpleaños Mascota</label>
+                        <input type="date" name="cumpleanos_mascota" class="form-control" value="<?= htmlspecialchars($cliente['cumpleanos_mascota'] ?? '') ?>">
+                    </div>
+
                     <div class="col-12 mt-2">
                         <button type="submit" class="btn-primary-custom me-2">
                             <i class="fas fa-<?= $editando ? 'floppy-disk' : 'plus' ?> me-2"></i>

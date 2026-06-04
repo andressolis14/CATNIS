@@ -19,4 +19,20 @@ class CatalogoController {
         // Vista pública (no requiere layout de admin)
         require_once APP_ROOT . '/views/catalogo.php';
     }
+
+    public function cartelera(): void {
+        // Cargar productos activos para la cartelera
+        $productos = $this->model->todos();
+        
+        // Filtrar solo los que tienen imagen para el carrusel principal
+        $productosConImagen = array_filter($productos, function($p) {
+            return !empty($p['imagen']);
+        });
+
+        if (empty($productosConImagen)) {
+            $productosConImagen = array_slice($productos, 0, 5); // Fallback
+        }
+
+        require_once APP_ROOT . '/views/cartelera.php';
+    }
 }

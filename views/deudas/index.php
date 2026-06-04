@@ -19,13 +19,20 @@ require_once APP_ROOT . '/views/layout/header.php';
     <?php else: ?>
         <div class="table-responsive">
             <table class="table">
-                <thead><tr>
-                    <th>Cliente</th><th>Teléfono</th><th>Fecha</th><th class="text-end">Total</th>
-                    <th class="text-end">Abonado</th><th class="text-end">Saldo</th><th>Estado</th><th class="text-end">Acción</th>
-                </tr></thead>
-                <tbody>
-                <?php foreach ($deudas as $d): ?>
+                <thead>
                     <tr>
+                        <th>Cliente</th>
+                        <th>Teléfono</th>
+                        <th>Fecha</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Abonado</th>
+                        <th class="text-end">Saldo</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($deudas as $d): ?>
                         <td class="fw-600 text-main">
                             <?= htmlspecialchars($d['cliente']) ?>
                             <?php if ($d['dias_antiguedad'] >= 7 && $d['estado'] !== 'pagada'): ?>
@@ -43,16 +50,19 @@ require_once APP_ROOT . '/views/layout/header.php';
                         <td><span class="badge-<?= $d['estado'] ?>"><?= ucfirst($d['estado']) ?></span></td>
                         <td class="text-end">
                             <?php if ($d['estado'] !== 'pagada' && !empty($d['telefono'])): ?>
-                                <a href="<?= $d['wa_link'] ?>" class="btn-sm-icon me-1" style="background:rgba(37,211,102,0.15);color:#25d366;" title="Cobrar por WhatsApp" target="_blank">
+                                <a href="<?= $d['wa_link'] ?>" class="btn-sm-icon me-1"
+                                    style="background:rgba(37,211,102,0.15);color:#25d366;" title="Cobrar por WhatsApp"
+                                    target="_blank">
                                     <i class="fab fa-whatsapp"></i>
                                 </a>
                             <?php endif; ?>
-                            <a href="<?= APP_URL ?>/deudas/detalle?id=<?= $d['id'] ?>" class="btn-sm-icon" style="background:rgba(245,158,11,0.15);color:var(--accent);" title="Ver / Abonar">
+                            <a href="<?= APP_URL ?>/deudas/detalle?id=<?= $d['id'] ?>" class="btn-sm-icon"
+                                style="background:rgba(245,158,11,0.15);color:var(--accent);" title="Ver / Abonar">
                                 <i class="fas fa-hand-holding-dollar"></i>
                             </a>
                         </td>
-                    </tr>
-                <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>

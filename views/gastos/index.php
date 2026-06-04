@@ -1,6 +1,6 @@
 <?php
 $pageTitle  = 'Gastos';
-$categorias = ['servicios', 'compras', 'transporte', 'nomina', 'alquiler', 'otros'];
+$categorias = ['servicios', 'compras', 'transporte', 'nomina', 'alquiler', 'prestamos', 'activos', 'otros'];
 require_once APP_ROOT . '/views/layout/header.php';
 ?>
 
@@ -9,9 +9,17 @@ require_once APP_ROOT . '/views/layout/header.php';
         <h4><i class="fas fa-wallet me-2" style="color:var(--accent)"></i>Gastos</h4>
         <p>Registro y control de salidas de dinero</p>
     </div>
-    <a href="<?= APP_URL ?>/gastos/crear" class="btn-primary-custom">
-        <i class="fas fa-plus me-2"></i>Nuevo Gasto
-    </a>
+    <div class="d-flex gap-2">
+        <a href="<?= APP_URL ?>/gastos/activos" class="btn" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:8px 16px; font-weight:600; display:flex; align-items:center; gap:8px; text-decoration:none;">
+            <i class="fas fa-box-archive"></i> <span>Activos</span>
+        </a>
+        <a href="<?= APP_URL ?>/gastos/maestro" class="btn" style="background:rgba(139,92,246,0.15); color:var(--accent); border:1px solid rgba(139,92,246,0.2); border-radius:10px; padding:8px 16px; font-weight:600; display:flex; align-items:center; gap:8px; text-decoration:none;">
+            <i class="fas fa-boxes"></i> <span>Catálogo de Ítems</span>
+        </a>
+        <a href="<?= APP_URL ?>/gastos/crear" class="btn-primary-custom">
+            <i class="fas fa-plus me-2"></i>Nuevo Gasto
+        </a>
+    </div>
 </div>
 
 <!-- Filtros -->
@@ -51,8 +59,6 @@ require_once APP_ROOT . '/views/layout/header.php';
         <?php $totalFiltrado = array_sum(array_column($gastos, 'monto')); ?>
         <div class="px-4 py-2 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--border);">
             <span style="font-size:13px;color:var(--text-muted)"><?= count($gastos) ?> resultado(s)</span>
-        <div class="px-4 py-2 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--border);">
-            <span style="font-size:13px;color:var(--text-muted)"><?= count($gastos) ?> resultado(s)</span>
             <span class="text-red fw-bold">Total: $<?= number_format($totalFiltrado, 0, ',', '.') ?></span>
         </div>
         <div class="table-responsive">
@@ -65,12 +71,15 @@ require_once APP_ROOT . '/views/layout/header.php';
                         <td class="fw-600 text-main"><?= htmlspecialchars($g['numero_factura'] ?: '—') ?></td>
                         <td>
                             <div class="mb-1" style="font-size:13px; font-weight:500;"><?= htmlspecialchars($g['descripcion'] ?: 'Gasto detallado') ?></div>
+                            <?php if (!empty($g['proveedor'])): ?>
+                                <div style="font-size:11px;color:var(--text-dim);"><i class="fas fa-store me-1"></i><?= htmlspecialchars($g['proveedor']) ?></div>
+                            <?php endif; ?>
                             <?php if (!empty($g['detalles'])): ?>
                                 <button class="btn btn-sm p-0 border-0" style="color:var(--accent); font-size:11px; text-decoration:none;" 
-                                        onclick="document.getElementById('detalles_<?= $g['id'] ?>').style.display = document.getElementById('detalles_<?= $g['id'] ?>').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('Ver') ? '<i class=\'fas fa-chevron-up me-1\'></i>Ocultar' : '<i class=\'fas fa-chevron-down me-1\'></i>Ver ' + <?= count($g['detalles']) ?> + ' producto(s)';">
+                                        onclick="let d = this.nextElementSibling; d.style.display = d.style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('Ver') ? '<i class=\'fas fa-chevron-up me-1\'></i>Ocultar' : '<i class=\'fas fa-chevron-down me-1\'></i>Ver ' + <?= count($g['detalles']) ?> + ' producto(s)';">
                                     <i class="fas fa-chevron-down me-1"></i>Ver <?= count($g['detalles']) ?> producto(s)
                                 </button>
-                                <div id="detalles_<?= $g['id'] ?>" style="display:none; margin-top:8px; padding:8px; background:rgba(255,255,255,0.03); border-radius:6px; border:1px solid var(--border);">
+                                <div style="display:none; margin-top:8px; padding:8px; background:rgba(255,255,255,0.03); border-radius:6px; border:1px solid var(--border);">
                                     <table style="width:100%; font-size:11px; border-collapse:collapse;">
                                         <thead style="color:var(--text-muted); border-bottom:1px solid var(--border);">
                                             <tr><th style="padding:4px; text-align:left;">Producto</th><th style="padding:4px; text-align:center;">Cant.</th><th style="padding:4px; text-align:right;">Subtotal</th></tr>
@@ -90,7 +99,7 @@ require_once APP_ROOT . '/views/layout/header.php';
                         </td>
                         <td>
                             <span style="background:rgba(139,92,246,0.15);color:var(--accent-purple);font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;">
-                                <?= ucfirst($g['categoria']) ?>
+                                <?= $g['categoria'] ? ucfirst($g['categoria']) : '—' ?>
                             </span>
                         </td>
                         <td class="text-dim" style="font-size:13px"><?= htmlspecialchars($g['registrado_por']) ?></td>

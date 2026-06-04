@@ -50,7 +50,7 @@ Este documento detalla todas las capacidades del sistema de gestión comercial p
 ## 📊 7. Módulo de Dashboard (Panel Principal)
 *   **Resumen Diario/Mensual**: Visualización instantánea de las métricas clave (Ventas del día, Ventas del mes, Gastos del mes).
 *   **Gráfica de Ventas**: Visualización de la tendencia de ingresos recientes.
-*   **Alertas de Stock**: Listado directo de productos que necesitan reposición inmediata.
+*   **Alertas de Stock**: Listado directo de productos que necesitan reposición inmediata prueba/prueba-----llllloooo.
 
 ## 📈 8. Módulo de Reportes
 *   **Análisis Mensual**: Balance de ingresos vs. egresos de cualquier mes del año.

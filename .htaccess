@@ -1,0 +1,7 @@
+# Redirigir el dominio principal directamente al catálogo
+RewriteEngine On
+RewriteRule ^$ public/catalogo [L,R=301]
+
+# Mantener soporte para el resto de rutas (login, dashboard, etc.)
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L]

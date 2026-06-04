@@ -23,33 +23,40 @@ require_once APP_ROOT . '/views/layout/header.php';
                         <?php endif; ?>
                         <input type="file" name="imagen" class="form-control" accept="image/*">
                     </div>
-                    <div class="col-12">
-                        <label class="form-label">Nombre del Producto *</label>
-                        <input type="text" name="nombre" class="form-control" value="<?= htmlspecialchars($producto['nombre'] ?? '') ?>" placeholder="Ej: Pastel de Pollo" required>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo <span style="color:var(--accent)">*</span></label>
+                        <select name="tipo" id="tipoSelector" class="form-select" onchange="toggleTipo(this.value)">
+                            <option value="producto" <?= ($producto['tipo'] ?? 'producto') === 'producto' ? 'selected' : '' ?>>📦 Producto</option>
+                            <option value="servicio" <?= ($producto['tipo'] ?? '') === 'servicio' ? 'selected' : '' ?>>⚙️ Servicio</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" name="nombre" class="form-control" value="<?= htmlspecialchars($producto['nombre'] ?? '') ?>" placeholder="Ej: Pastel de Pollo / Domicilio / Personalización" required>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Descripción</label>
                         <textarea name="descripcion" class="form-control" rows="2" placeholder="Descripción opcional..."><?= htmlspecialchars($producto['descripcion'] ?? '') ?></textarea>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Precio de Compra *</label>
+                    <div class="col-md-6" id="campoCompra">
+                        <label class="form-label">Precio de Compra</label>
                         <div class="input-group">
                             <span class="input-group-text" style="background:var(--bg-card2);border:1px solid var(--border);border-right:none;color:var(--text-muted);">$</span>
-                            <input type="number" step="1" min="0" name="precio_compra" class="form-control" style="border-left:none;" value="<?= (int)($producto['precio_compra'] ?? 0) ?>" required>
+                            <input type="number" step="1" min="0" name="precio_compra" class="form-control" style="border-left:none;" value="<?= (int)($producto['precio_compra'] ?? 0) ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Precio de Venta *</label>
+                        <label class="form-label">Precio de Venta / Tarifa *</label>
                         <div class="input-group">
                             <span class="input-group-text" style="background:var(--bg-card2);border:1px solid var(--border);border-right:none;color:var(--text-muted);">$</span>
                             <input type="number" step="1" min="0" name="precio_venta" class="form-control" style="border-left:none;" value="<?= (int)($producto['precio_venta'] ?? 0) ?>" required>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Stock Actual *</label>
-                        <input type="number" min="0" name="stock" class="form-control" value="<?= $producto['stock'] ?? '0' ?>" required>
+                    <div class="col-md-6" id="campoStock">
+                        <label class="form-label">Stock Actual</label>
+                        <input type="number" min="0" name="stock" class="form-control" value="<?= $producto['stock'] ?? '0' ?>">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" id="campoStockMin">
                         <label class="form-label">Stock Mínimo (alerta)</label>
                         <input type="number" min="0" name="stock_minimo" class="form-control" value="<?= $producto['stock_minimo'] ?? '5' ?>">
                     </div>
@@ -65,5 +72,16 @@ require_once APP_ROOT . '/views/layout/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function toggleTipo(tipo) {
+    const campos = ['campoCompra', 'campoStock', 'campoStockMin'];
+    campos.forEach(id => {
+        document.getElementById(id).style.display = tipo === 'servicio' ? 'none' : '';
+    });
+}
+// Aplicar al cargar
+toggleTipo(document.getElementById('tipoSelector').value);
+</script>
 
 <?php require_once APP_ROOT . '/views/layout/footer.php'; ?>

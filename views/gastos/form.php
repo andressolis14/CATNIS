@@ -1,7 +1,7 @@
 <?php
 $editando   = isset($gasto);
 $pageTitle  = $editando ? 'Editar Gasto' : 'Nuevo Gasto';
-$categorias = ['servicios', 'compras', 'transporte', 'nomina', 'alquiler', 'otros'];
+$categorias = ['servicios', 'compras', 'transporte', 'nomina', 'alquiler', 'prestamos', 'activos', 'otros'];
 require_once APP_ROOT . '/views/layout/header.php';
 ?>
 
@@ -24,14 +24,29 @@ require_once APP_ROOT . '/views/layout/header.php';
                         <input type="date" name="fecha" class="form-control" value="<?= $gasto['fecha'] ?? date('Y-m-d') ?>" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Categoría</label>
-                        <select name="categoria" class="form-select">
+                        <label class="form-label">Categoría <span style="color:var(--accent)">*</span></label>
+                        <select name="categoria" class="form-select" required>
+                            <option value="" <?= !$editando ? 'selected' : '' ?> disabled>— Selecciona una categoría —</option>
                             <?php foreach ($categorias as $cat): ?>
-                                <option value="<?= $cat ?>" <?= ($gasto['categoria'] ?? 'otros') === $cat ? 'selected' : '' ?>>
+                                <option value="<?= $cat ?>" <?= ($editando && ($gasto['categoria'] ?? '') === $cat) ? 'selected' : '' ?>>
                                     <?= ucfirst($cat) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Pagado con <span style="color:var(--accent)">*</span></label>
+                        <select name="metodo_pago" class="form-select">
+                            <option value="efectivo"      <?= ($gasto['metodo_pago'] ?? 'efectivo') === 'efectivo'      ? 'selected' : '' ?>>💵 Efectivo</option>
+                            <option value="transferencia" <?= ($gasto['metodo_pago'] ?? '') === 'transferencia' ? 'selected' : '' ?>>🏦 Transferencia / Banco</option>
+                            <option value="otros"         <?= ($gasto['metodo_pago'] ?? '') === 'otros'         ? 'selected' : '' ?>>📱 Otros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Proveedor</label>
+                        <input type="text" name="proveedor" class="form-control"
+                               value="<?= htmlspecialchars($gasto['proveedor'] ?? '') ?>"
+                               placeholder="Nombre del proveedor...">
                     </div>
                     <div class="col-12">
                         <label class="form-label">Descripción General (Opcional)</label>
@@ -52,28 +67,34 @@ require_once APP_ROOT . '/views/layout/header.php';
                             <table class="table table-dark-custom w-100" id="tablaItems" style="min-width: 700px;">
                                 <thead>
                                     <tr>
+                                        <th style="width:100px;">Código</th>
                                         <th>Descripción del Ítem</th>
-                                        <th style="width:110px;" class="text-center">Cant.</th>
-                                        <th style="width:160px;" class="text-end">Precio Unit. ($)</th>
-                                        <th style="width:160px;" class="text-end">Subtotal ($)</th>
-                                        <th style="width:60px;"></th>
+                                        <th style="width:90px;" class="text-center">Unidad</th>
+                                        <th style="width:130px;" class="text-center">Cant.</th>
+                                        <th style="width:150px;" class="text-end">Precio Unit. ($)</th>
+                                        <th style="width:150px;" class="text-end">Subtotal ($)</th>
+                                        <th style="width:50px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyItems">
                                     <?php if ($editando && !empty($gasto['detalles'])): ?>
                                         <?php foreach ($gasto['detalles'] as $i => $det): ?>
                                             <tr>
-                                                <td><input type="text" name="items[<?= $i ?>][descripcion]" class="form-control form-control-sm" value="<?= htmlspecialchars($det['descripcion']) ?>" required></td>
-                                                <td><input type="number" min="1" name="items[<?= $i ?>][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="<?= $det['cantidad'] ?? 1 ?>" required oninput="calcularTotal()"></td>
-                                                <td><input type="text" name="items[<?= $i ?>][monto]" class="form-control form-control-sm monto-input text-end" value="<?= number_format($det['monto'], 0, ',', '.') ?>" required oninput="handleMontoInput(this)"></td>
-                                                <td><input type="text" class="form-control form-control-sm subtotal-input text-end" value="<?= number_format(($det['cantidad'] ?? 1) * $det['monto'], 0, ',', '.') ?>" readonly style="background:rgba(255,255,255,0.03);border-color:transparent;color:var(--text-muted);font-weight:600;cursor:default;"></td>
+                                                <td><input type="text" class="form-control form-control-sm" value="<?= htmlspecialchars($det['codigo_maestro'] ?? '---') ?>" readonly style="background:rgba(255,255,255,0.03); border:none; color:var(--accent);"></td>
+                                                <td><input type="text" name="items[<?= $i ?>][descripcion]" class="form-control form-control-sm" value="<?= htmlspecialchars($det['descripcion']) ?>" list="listaItems" required oninput="handleItemInput(this)"></td>
+                                                <td><input type="text" name="items[<?= $i ?>][unidad_medida]" class="form-control form-control-sm unidad-input text-center" value="<?= htmlspecialchars($det['unidad_medida'] ?? 'unid') ?>" placeholder="unid" style="min-width:60px;"></td>
+                                                <td><input type="number" min="0" step="any" name="items[<?= $i ?>][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="<?= $det['cantidad'] ?? 1 ?>" required oninput="calcularTotal()"></td>
+                                                <td><input type="text" name="items[<?= $i ?>][monto]" class="form-control form-control-sm monto-input text-end" value="<?= number_format($det['monto'], 2, ',', '.') ?>" required oninput="handleMontoInput(this)"></td>
+                                                <td><input type="text" class="form-control form-control-sm subtotal-input text-end" value="<?= number_format(($det['cantidad'] ?? 1) * $det['monto'], 2, ',', '.') ?>" readonly style="background:rgba(255,255,255,0.03);border-color:transparent;color:var(--text-muted);font-weight:600;cursor:default;"></td>
                                                 <td><button type="button" class="btn-delete-sm" onclick="eliminarFila(this)"><i class="fas fa-trash"></i></button></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td><input type="text" name="items[0][descripcion]" class="form-control form-control-sm" placeholder="Ej: Harina de avena" required></td>
-                                            <td><input type="number" min="1" name="items[0][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="1" required oninput="calcularTotal()"></td>
+                                            <td><input type="text" class="form-control form-control-sm" placeholder="---" readonly style="background:rgba(255,255,255,0.03); border:none; color:var(--accent);"></td>
+                                            <td><input type="text" name="items[0][descripcion]" class="form-control form-control-sm" placeholder="Buscar o escribir ítem..." list="listaItems" required oninput="handleItemInput(this)"></td>
+                                            <td><input type="text" name="items[0][unidad_medida]" class="form-control form-control-sm unidad-input text-center" placeholder="unid" style="min-width:60px;"></td>
+                                            <td><input type="number" min="0" step="any" name="items[0][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="1" required oninput="calcularTotal()"></td>
                                             <td><input type="text" name="items[0][monto]" class="form-control form-control-sm monto-input text-end" placeholder="0" required oninput="handleMontoInput(this)"></td>
                                             <td><input type="text" class="form-control form-control-sm subtotal-input text-end" value="$0" readonly style="background:rgba(255,255,255,0.03);border-color:transparent;color:var(--text-muted);font-weight:600;cursor:default;"></td>
                                             <td></td>
@@ -82,12 +103,13 @@ require_once APP_ROOT . '/views/layout/header.php';
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th colspan="3" class="text-end">TOTAL:</th>
+                                        <th colspan="4" class="text-end">TOTAL:</th>
                                         <th id="totalGasto" class="text-end" style="color:var(--accent);font-size:18px;">$<?= number_format($gasto['monto'] ?? 0, 0, ',', '.') ?></th>
                                         <th></th>
                                     </tr>
                                 </tfoot>
                             </table>
+                            <datalist id="listaItems"></datalist>
                         </div>
                     </div>
 
@@ -107,23 +129,37 @@ require_once APP_ROOT . '/views/layout/header.php';
 let filaIdx = <?= $editando ? count($gasto['detalles']) : 1 ?>;
 const DRAFT_KEY = 'catnis_gasto_draft';
 
-// Limpiar puntos antes de enviar y borrar borrador
-document.querySelector('form').addEventListener('submit', function() {
+// Convertir formato colombiano a decimal PHP antes de enviar
+document.querySelector('form').addEventListener('submit', function(e) {
+    const btn = this.querySelector('[type="submit"]');
+    if (btn.disabled) { e.preventDefault(); return; }
+
     document.querySelectorAll('.monto-input').forEach(input => {
-        input.value = input.value.replace(/\./g, '');
+        input.value = input.value.replace(/\./g, '').replace(',', '.');
+    });
+    document.querySelectorAll('.cantidad-input').forEach(input => {
+        input.value = input.value.replace(',', '.');
     });
     if (!<?= $editando ? 'true' : 'false' ?>) {
         localStorage.removeItem(DRAFT_KEY);
     }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
 });
 
 function handleMontoInput(input) {
-    // Formatear visualmente
-    let val = input.value.replace(/\D/g, "");
-    if (val !== "") {
-        input.value = new Intl.NumberFormat('es-CO').format(val);
-    }
-    // Calcular totales y guardar borrador
+    const raw = input.value;
+    const hasDecimal = raw.includes(',');
+    const parts = raw.split(',');
+
+    const intRaw = parts[0].replace(/\D/g, '');
+    const decRaw = hasDecimal ? (parts[1] || '').replace(/\D/g, '').substring(0, 2) : null;
+
+    let formatted = intRaw ? new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(parseInt(intRaw) || 0) : '';
+    if (decRaw !== null) formatted += ',' + decRaw;
+
+    input.value = formatted;
     calcularTotal();
     saveDraft();
 }
@@ -186,8 +222,10 @@ function agregarFila() {
     const tbody = document.getElementById('tbodyItems');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td><input type="text" name="items[${filaIdx}][descripcion]" class="form-control form-control-sm" placeholder="Descripción del ítem..." required oninput="saveDraft()"></td>
-        <td><input type="number" min="1" name="items[${filaIdx}][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="1" required oninput="saveDraft(); calcularTotal();"></td>
+        <td><input type="text" class="form-control form-control-sm" placeholder="---" readonly style="background:rgba(255,255,255,0.03); border:none; color:var(--accent);"></td>
+        <td><input type="text" name="items[${filaIdx}][descripcion]" class="form-control form-control-sm" placeholder="Buscar o escribir ítem..." list="listaItems" required oninput="handleItemInput(this)"></td>
+        <td><input type="text" name="items[${filaIdx}][unidad_medida]" class="form-control form-control-sm unidad-input text-center" placeholder="unid" style="min-width:60px;"></td>
+        <td><input type="number" min="0" step="any" name="items[${filaIdx}][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="1" required oninput="saveDraft(); calcularTotal();"></td>
         <td><input type="text" name="items[${filaIdx}][monto]" class="form-control form-control-sm monto-input text-end" placeholder="0" required oninput="handleMontoInput(this)"></td>
         <td><input type="text" class="form-control form-control-sm subtotal-input text-end" value="$0" readonly style="background:rgba(255,255,255,0.03);border-color:transparent;color:var(--text-muted);font-weight:600;cursor:default;"></td>
         <td><button type="button" class="btn-delete-sm" onclick="eliminarFila(this)"><i class="fas fa-trash"></i></button></td>
@@ -196,25 +234,86 @@ function agregarFila() {
     filaIdx++;
 }
 
+function handleItemInput(input) {
+    const tr = input.closest('tr');
+    const codigoInput = tr.querySelector('td:first-child input');
+    
+    // Normalizar entrada
+    const val = input.value.trim().toLowerCase();
+    
+    if (!val) {
+        codigoInput.value = '';
+        codigoInput.placeholder = '---';
+        codigoInput.style.color = 'var(--text-dim)';
+        saveDraft();
+        return;
+    }
+
+    // Buscar coincidencia exacta (sin importar mayúsculas/minúsculas)
+    const itemEncontrado = itemsMaestro.find(it => it.nombre.trim().toLowerCase() === val);
+    
+    const unidadInput = tr.querySelector('.unidad-input');
+    if (itemEncontrado) {
+        codigoInput.value = itemEncontrado.codigo;
+        codigoInput.style.color = 'var(--accent)';
+        if (unidadInput && !unidadInput.dataset.editado) {
+            unidadInput.value = itemEncontrado.unidad_medida || 'unid';
+        }
+    } else {
+        codigoInput.value = 'NUEVO';
+        codigoInput.style.color = 'var(--text-muted)';
+    }
+    saveDraft();
+}
+
+async function fetchItemsMaestro() {
+    try {
+        const resp = await fetch('<?= APP_URL ?>/gastos/buscarItems');
+        if (!resp.ok) throw new Error('Error al cargar catálogo');
+        itemsMaestro = await resp.json();
+        
+        const dl = document.getElementById('listaItems');
+        dl.innerHTML = '';
+        itemsMaestro.forEach(it => {
+            const opt = document.createElement('option');
+            opt.value = it.nombre;
+            dl.appendChild(opt);
+        });
+        
+        // Disparar validación inicial para filas existentes (en edición)
+        document.querySelectorAll('input[list="listaItems"]').forEach(inp => handleItemInput(inp));
+        
+    } catch(e) { 
+        console.error('Catnis Error:', e);
+    }
+}
+
 function eliminarFila(btn) {
     btn.closest('tr').remove();
     calcularTotal();
     saveDraft();
 }
 
+function parseMonto(val) {
+    // "2.000,50" → 2000.50
+    return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function formatCOP(val) {
+    return val.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
 function calcularTotal() {
     let total = 0;
     document.querySelectorAll('#tbodyItems tr').forEach(tr => {
-        const cant = parseInt(tr.querySelector('.cantidad-input').value) || 0;
-        const montoRaw = tr.querySelector('.monto-input').value.replace(/\./g, '') || 0;
-        const monto = parseInt(montoRaw);
-        const sub = (cant * monto);
+        const cant = parseFloat(tr.querySelector('.cantidad-input').value.replace(',', '.')) || 0;
+        const monto = parseMonto(tr.querySelector('.monto-input').value);
+        const sub = cant * monto;
         total += sub;
-        
-        // Actualizar input de subtotal visual
-        tr.querySelector('.subtotal-input').value = '$' + sub.toLocaleString('es-CO');
+        const subInput = tr.querySelector('.subtotal-input');
+        if (subInput) subInput.value = '$' + formatCOP(sub);
     });
-    document.getElementById('totalGasto').textContent = '$' + total.toLocaleString('es-CO');
+    document.getElementById('totalGasto').textContent = '$' + formatCOP(total);
 }
 
 // Cargar borrador al iniciar
@@ -224,7 +323,15 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('input', saveDraft);
     });
     
+    // Marcar unidad como editada manualmente para no sobreescribir
+    document.getElementById('tbodyItems').addEventListener('input', function(e) {
+        if (e.target.classList.contains('unidad-input')) {
+            e.target.dataset.editado = '1';
+        }
+    });
+
     loadDraft();
+    fetchItemsMaestro();
 });
 </script>
 

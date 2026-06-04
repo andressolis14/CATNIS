@@ -29,7 +29,14 @@ require_once APP_ROOT . '/views/layout/header.php';
                 <?php foreach ($clientes as $c): ?>
                     <tr>
                         <td class="text-dim"><?= $c['id'] ?></td>
-                        <td class="fw-600 text-main"><?= htmlspecialchars($c['nombre']) ?></td>
+                        <td class="fw-600 text-main">
+                            <?= htmlspecialchars($c['nombre']) ?>
+                            <?php if (!empty($c['nombre_mascota'])): ?>
+                                <div style="font-size:11px; color:var(--accent); font-weight:500;">
+                                    <i class="fas fa-paw me-1"></i><?= htmlspecialchars($c['nombre_mascota']) ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
                         <td class="text-muted"><?= htmlspecialchars($c['telefono'] ?: '—') ?></td>
                         <td class="text-muted"><?= htmlspecialchars($c['correo'] ?: '—') ?></td>
                         <td class="text-end">

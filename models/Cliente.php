@@ -22,12 +22,12 @@ class Cliente {
     }
 
     public function crear(array $datos): bool {
-        $stmt = $this->db->prepare("INSERT INTO clientes (nombre, telefono, correo, direccion) VALUES (:nombre,:telefono,:correo,:direccion)");
+        $stmt = $this->db->prepare("INSERT INTO clientes (nombre, telefono, correo, direccion, nombre_mascota, cumpleanos_mascota) VALUES (:nombre,:telefono,:correo,:direccion,:nombre_mascota,:cumpleanos_mascota)");
         return $stmt->execute($datos);
     }
 
     public function actualizar(int $id, array $datos): bool {
-        $stmt = $this->db->prepare("UPDATE clientes SET nombre=:nombre, telefono=:telefono, correo=:correo, direccion=:direccion WHERE id=:id");
+        $stmt = $this->db->prepare("UPDATE clientes SET nombre=:nombre, telefono=:telefono, correo=:correo, direccion=:direccion, nombre_mascota=:nombre_mascota, cumpleanos_mascota=:cumpleanos_mascota WHERE id=:id");
         $datos[':id'] = $id;
         return $stmt->execute($datos);
     }

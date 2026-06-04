@@ -4,33 +4,37 @@
 // ============================================================
 require_once APP_ROOT . '/models/Deuda.php';
 
-class DeudaController {
+class DeudaController
+{
     private Deuda $model;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->model = new Deuda();
     }
 
-    public function index(): void {
+    public function index(): void
+    {
         $deudas = $this->model->todas();
-        
+
         // Calcular antigüedad para cada deuda
-        foreach ($deudas as &$d) {
+        foreach ($deudas as $key => $d) {
             $fechaDeuda = new DateTime($d['fecha']);
-            $hoy        = new DateTime(date('Y-m-d'));
-            $diff       = $hoy->diff($fechaDeuda);
-            $d['dias_antiguedad'] = $diff->days;
-            
+            $hoy = new DateTime(date('Y-m-d'));
+            $diff = $hoy->diff($fechaDeuda);
+            $deudas[$key]['dias_antiguedad'] = $diff->days;
+
             // Generar link de WhatsApp para cobro
             $msg = "Hola " . $d['cliente'] . ", te saludamos de *" . APP_NAME . "* 🥐. Te recordamos que tienes un saldo pendiente de *$" . number_format($d['saldo'], 2) . "*. ¿Cuándo podrías pasar a abonar? ¡Quedamos atentos! 😊";
-            $d['wa_link'] = "https://wa.me/" . preg_replace('/[^0-9]/', '', $d['telefono']) . "?text=" . urlencode($msg);
+            $deudas[$key]['wa_link'] = "https://wa.me/" . preg_replace('/[^0-9]/', '', $d['telefono']) . "?text=" . urlencode($msg);
         }
-        
+
         require_once APP_ROOT . '/views/deudas/index.php';
     }
 
-    public function detalle(): void {
-        $id    = (int)($_GET['id'] ?? 0);
+    public function detalle(): void
+    {
+        $id = (int) ($_GET['id'] ?? 0);
         $deuda = $this->model->buscarPorId($id);
         if (!$deuda) {
             header('Location: ' . APP_URL . '/deudas');
@@ -40,15 +44,16 @@ class DeudaController {
         require_once APP_ROOT . '/views/deudas/detalle.php';
     }
 
-    public function abonar(): void {
+    public function abonar(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . APP_URL . '/deudas');
             exit;
         }
-        $id          = (int)($_POST['deuda_id'] ?? 0);
-        $monto       = (float)($_POST['monto'] ?? 0);
+        $id = (int) ($_POST['deuda_id'] ?? 0);
+        $monto = (float) ($_POST['monto'] ?? 0);
         $metodo_pago = $_POST['metodo_pago'] ?? 'efectivo';
-        $nota        = trim($_POST['nota'] ?? '');
+        $nota = trim($_POST['nota'] ?? '');
 
         if ($monto <= 0) {
             $_SESSION['error'] = 'El monto debe ser mayor a 0.';
