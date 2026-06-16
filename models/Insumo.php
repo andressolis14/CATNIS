@@ -47,6 +47,6 @@ class Insumo {
     }
 
     public function todosParaSelect(): array {
-        return $this->db->query("SELECT id, nombre, unidad_medida, stock FROM insumos WHERE activo = 1 ORDER BY nombre ASC")->fetchAll();
+        return $this->db->query("SELECT id, nombre, unidad_medida, stock, costo_unitario FROM insumos WHERE activo = 1 ORDER BY nombre ASC")->fetchAll();
     }
 }

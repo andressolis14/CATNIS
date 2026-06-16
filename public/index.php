@@ -106,8 +106,10 @@ $controllerMap = [
     'catalogo' => 'CatalogoController',
     'usuarios' => 'UsuariosController', // Nueva ruta limpia para gestión de usuarios
     'caja'    => 'CajaController',
-    'insumos' => 'InsumoController',
-    'recetas' => 'RecetaController',
+    'insumos'     => 'InsumoController',
+    'recetas'     => 'RecetaController',
+    'movimientos' => 'MovimientoInsumoController',
+    'produccion'  => 'ProduccionController',
 ];
 
 if (!array_key_exists($controller, $controllerMap)) {

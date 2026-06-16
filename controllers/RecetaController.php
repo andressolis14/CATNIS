@@ -48,10 +48,12 @@ class RecetaController {
             }
 
             $datos = [
-                ':producto_id' => $productoId,
-                ':nombre'      => trim($_POST['nombre'] ?? ''),
-                ':descripcion' => trim($_POST['descripcion'] ?? ''),
-                ':rendimiento' => (float)($_POST['rendimiento'] ?? 1),
+                ':producto_id'  => $productoId,
+                ':nombre'       => trim($_POST['nombre'] ?? ''),
+                ':descripcion'  => trim($_POST['descripcion'] ?? ''),
+                ':rendimiento'  => (float)($_POST['rendimiento'] ?? 1),
+                ':costo_energia'  => (float)str_replace(['.', ','], ['', '.'], $_POST['costo_energia'] ?? '0'),
+                ':rentabilidad'   => (isset($_POST['rentabilidad']) && $_POST['rentabilidad'] !== '') ? (float)$_POST['rentabilidad'] : null,
             ];
 
             if ($this->model->crear($datos, $insumosProcesados)) {
@@ -89,9 +91,11 @@ class RecetaController {
             }
 
             $datos = [
-                ':nombre'      => trim($_POST['nombre'] ?? ''),
-                ':descripcion' => trim($_POST['descripcion'] ?? ''),
-                ':rendimiento' => (float)($_POST['rendimiento'] ?? 1),
+                ':nombre'       => trim($_POST['nombre'] ?? ''),
+                ':descripcion'  => trim($_POST['descripcion'] ?? ''),
+                ':rendimiento'  => (float)($_POST['rendimiento'] ?? 1),
+                ':costo_energia'  => (float)str_replace(['.', ','], ['', '.'], $_POST['costo_energia'] ?? '0'),
+                ':rentabilidad'   => (isset($_POST['rentabilidad']) && $_POST['rentabilidad'] !== '') ? (float)$_POST['rentabilidad'] : null,
             ];
 
             if ($this->model->actualizar($id, $datos, $insumosProcesados)) {

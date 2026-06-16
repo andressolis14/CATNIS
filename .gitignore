@@ -1,0 +1,4 @@
+.vscode/sftp.json
+config/config.php
+*.log
+.DS_Store

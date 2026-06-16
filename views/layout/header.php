@@ -86,6 +86,18 @@
                     </a>
                 </li>
                 <li>
+                    <a href="<?= APP_URL ?>/produccion"
+                        class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/produccion') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-industry"></i> <span>Producción</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= APP_URL ?>/movimientos"
+                        class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/movimientos') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-arrows-up-down"></i> <span>Movimientos</span>
+                    </a>
+                </li>
+                <li>
                     <a href="<?= APP_URL ?>/caja"
                         class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/caja') !== false && strpos($_SERVER['REQUEST_URI'], '/historial') === false ? 'active' : '' ?>">
                         <i class="fas fa-cash-register"></i> <span>Caja Rápida</span>

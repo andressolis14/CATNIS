@@ -60,10 +60,10 @@ require_once APP_ROOT . '/views/layout/header.php';
                                 </span>
                             </td>
                             <td class="text-center fw-bold <?= $bajo ? 'text-danger' : 'text-success' ?>">
-                                <?= number_format($ins['stock'], 3) ?>
+                                <?= number_format($ins['stock'], 0, ',', '.') ?>
                             </td>
                             <td class="text-center" style="color:var(--text-muted);">
-                                <?= number_format($ins['stock_minimo'], 3) ?>
+                                <?= number_format($ins['stock_minimo'], 0, ',', '.') ?>
                             </td>
                             <td class="text-end" style="color:var(--accent);">
                                 $<?= number_format($ins['costo_unitario'], 0, ',', '.') ?>

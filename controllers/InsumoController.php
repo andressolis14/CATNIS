@@ -23,9 +23,9 @@ class InsumoController {
                 ':nombre'         => trim($_POST['nombre'] ?? ''),
                 ':descripcion'    => trim($_POST['descripcion'] ?? ''),
                 ':unidad_medida'  => trim($_POST['unidad_medida'] ?? 'unid'),
-                ':stock'          => (float)($_POST['stock'] ?? 0),
-                ':stock_minimo'   => (float)($_POST['stock_minimo'] ?? 0),
-                ':costo_unitario' => (float)str_replace(['.', ','], ['', '.'], $_POST['costo_unitario'] ?? '0'),
+                ':stock'          => (int)($_POST['stock'] ?? 0),
+                ':stock_minimo'   => (int)($_POST['stock_minimo'] ?? 0),
+                ':costo_unitario' => (float)($_POST['costo_unitario'] ?? 0),
             ];
 
             if (empty($datos[':nombre'])) {
@@ -56,9 +56,9 @@ class InsumoController {
                 ':nombre'         => trim($_POST['nombre'] ?? ''),
                 ':descripcion'    => trim($_POST['descripcion'] ?? ''),
                 ':unidad_medida'  => trim($_POST['unidad_medida'] ?? 'unid'),
-                ':stock'          => (float)($_POST['stock'] ?? 0),
-                ':stock_minimo'   => (float)($_POST['stock_minimo'] ?? 0),
-                ':costo_unitario' => (float)str_replace(['.', ','], ['', '.'], $_POST['costo_unitario'] ?? '0'),
+                ':stock'          => (int)($_POST['stock'] ?? 0),
+                ':stock_minimo'   => (int)($_POST['stock_minimo'] ?? 0),
+                ':costo_unitario' => (float)($_POST['costo_unitario'] ?? 0),
             ];
 
             if ($this->model->actualizar($id, $datos)) {

@@ -34,8 +34,8 @@ require_once APP_ROOT . '/views/layout/header.php';
                     <div class="col-md-3">
                         <label class="form-label">Rendimiento</label>
                         <div class="input-group">
-                            <input type="number" name="rendimiento" class="form-control" min="0.001" step="0.001"
-                                   value="<?= $editando ? $receta['rendimiento'] : 1 ?>">
+                            <input type="number" name="rendimiento" class="form-control" min="0" step="any"
+                                   value="<?= $editando ? round((float)$receta['rendimiento'], 2) : 1 ?>">
                             <span class="input-group-text" style="font-size:12px;">unid.</span>
                         </div>
                         <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">¿Cuántas unidades produce esta receta?</div>
@@ -92,7 +92,7 @@ require_once APP_ROOT . '/views/layout/header.php';
                                             </td>
                                             <td>
                                                 <input type="number" name="insumos[<?= $i ?>][cantidad]" class="form-control form-control-sm text-center"
-                                                       min="0.001" step="any" value="<?= $ins['cantidad'] ?>" required>
+                                                       min="0" step="any" value="<?= round((float)$ins['cantidad'], 2) ?>" required>
                                             </td>
                                             <td><button type="button" class="btn-delete-sm" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
                                         </tr>
@@ -106,6 +106,79 @@ require_once APP_ROOT . '/views/layout/header.php';
                                     <?php endif; ?>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Rentabilidad manual -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-percent me-1" style="color:#10b981"></i>
+                            Rentabilidad / Margen (%)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" name="rentabilidad" class="form-control"
+                                   min="0" max="100" step="0.1"
+                                   value="<?= isset($receta['rentabilidad']) && $receta['rentabilidad'] !== null ? number_format((float)$receta['rentabilidad'], 1, '.', '') : '' ?>"
+                                   placeholder="Ej: 56,5">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Ganancia estimada sobre el costo</div>
+                    </div>
+
+                    <!-- Costo de energía -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-bolt me-1" style="color:var(--accent)"></i>
+                            Costo de Energía / Otros ($)
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" name="costo_energia" id="costoEnergiaInput" class="form-control"
+                                   value="<?= $editando ? number_format((float)($receta['costo_energia'] ?? 0), 0, ',', '.') : '' ?>"
+                                   placeholder="0" oninput="formatEnergy(this); calcularCostos();">
+                        </div>
+                        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Gas, electricidad, empaques u otros costos fijos por producción</div>
+                    </div>
+
+                    <!-- Panel de análisis de costos -->
+                    <div class="col-12" id="panelCostos" style="display:none;">
+                        <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);border-radius:12px;padding:16px;">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-calculator me-2" style="color:var(--accent)"></i>
+                                Análisis de Costos
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr style="font-size:12px;color:var(--text-muted);">
+                                            <th>Insumo</th>
+                                            <th class="text-center">Cantidad</th>
+                                            <th class="text-end">Costo / u</th>
+                                            <th class="text-end">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyCostos"></tbody>
+                                    <tfoot>
+                                        <tr id="filaEnergia" style="display:none;">
+                                            <td colspan="3" style="font-size:13px;color:var(--text-muted);">
+                                                <i class="fas fa-bolt me-1" style="color:var(--accent)"></i>Energía / Otros
+                                            </td>
+                                            <td class="text-end fw-bold" style="color:var(--accent);" id="costoEnergiaDisplay">$0</td>
+                                        </tr>
+                                        <tr style="border-top:2px solid rgba(251,191,36,0.4);">
+                                            <td colspan="3" class="fw-bold" style="font-size:13px;">COSTO TOTAL RECETA</td>
+                                            <td class="text-end fw-bold" style="color:var(--accent);font-size:15px;" id="costoTotalDisplay">$0</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" style="font-size:12px;color:var(--text-muted);">
+                                                Costo por unidad producida
+                                                <span id="rendimientoLabel" style="color:var(--accent);"></span>
+                                            </td>
+                                            <td class="text-end fw-bold text-success" id="costoUnidadDisplay">$0</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -123,8 +196,11 @@ require_once APP_ROOT . '/views/layout/header.php';
 
 <script>
 const insumosOpts = <?= json_encode(array_map(fn($i) => [
-    'id'    => $i['id'],
-    'label' => $i['nombre'] . ' (' . $i['unidad_medida'] . ')',
+    'id'     => $i['id'],
+    'label'  => $i['nombre'] . ' (' . $i['unidad_medida'] . ')',
+    'nombre' => $i['nombre'],
+    'unidad' => $i['unidad_medida'],
+    'costo'  => (float)$i['costo_unitario'],
 ], $insumos)) ?>;
 
 let filaIdx = <?= $editando ? count($receta['insumos']) : 0 ?>;
@@ -136,19 +212,84 @@ function agregarFila() {
     const opts = insumosOpts.map(o => `<option value="${o.id}">${o.label}</option>`).join('');
     tr.innerHTML = `
         <td>
-            <select name="insumos[${filaIdx}][insumo_id]" class="form-select form-select-sm" required>
+            <select name="insumos[${filaIdx}][insumo_id]" class="form-select form-select-sm" required onchange="calcularCostos()">
                 <option value="">— Seleccionar —</option>${opts}
             </select>
         </td>
         <td>
             <input type="number" name="insumos[${filaIdx}][cantidad]" class="form-control form-control-sm text-center"
-                   min="0.001" step="any" placeholder="0" required>
+                   min="0.001" step="any" placeholder="0" required oninput="calcularCostos()">
         </td>
-        <td><button type="button" class="btn-delete-sm" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
+        <td><button type="button" class="btn-delete-sm" onclick="this.closest('tr').remove(); calcularCostos();"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(tr);
     filaIdx++;
 }
+
+function formatEnergy(input) {
+    let val = input.value.replace(/\D/g, '');
+    input.value = val ? new Intl.NumberFormat('es-CO').format(parseInt(val)) : '';
+}
+
+function parseCOP(val) {
+    return parseFloat((val || '0').toString().replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function calcularCostos() {
+    const rows = document.querySelectorAll('#tbodyInsumos tr:not(#filaVacia)');
+    const rendimiento = parseFloat(document.querySelector('[name="rendimiento"]').value) || 1;
+    const energia = parseCOP(document.getElementById('costoEnergiaInput').value);
+
+    let totalInsumos = 0;
+    const tbody = document.getElementById('tbodyCostos');
+    tbody.innerHTML = '';
+
+    rows.forEach(tr => {
+        const sel = tr.querySelector('select[name*="[insumo_id]"]');
+        const cantInput = tr.querySelector('input[name*="[cantidad]"]');
+        if (!sel || !cantInput) return;
+        const id = parseInt(sel.value);
+        const cant = parseFloat(cantInput.value) || 0;
+        if (!id || !cant) return;
+        const ins = insumosOpts.find(o => o.id === id);
+        if (!ins) return;
+        const sub = cant * ins.costo;
+        totalInsumos += sub;
+        tbody.innerHTML += `
+            <tr style="font-size:13px;">
+                <td>${ins.nombre} <span style="color:var(--text-dim);font-size:11px;">(${ins.unidad})</span></td>
+                <td class="text-center">${cant.toLocaleString('es-CO')} ${ins.unidad}</td>
+                <td class="text-end">$${ins.costo.toLocaleString('es-CO', {minimumFractionDigits:0,maximumFractionDigits:2})}</td>
+                <td class="text-end fw-bold">$${Math.round(sub).toLocaleString('es-CO')}</td>
+            </tr>`;
+    });
+
+    const total = totalInsumos + energia;
+    const costoPorUnidad = rendimiento > 0 ? total / rendimiento : 0;
+
+    document.getElementById('filaEnergia').style.display = energia > 0 ? '' : 'none';
+    document.getElementById('costoEnergiaDisplay').textContent = '$' + Math.round(energia).toLocaleString('es-CO');
+    document.getElementById('costoTotalDisplay').textContent = '$' + Math.round(total).toLocaleString('es-CO');
+    document.getElementById('costoUnidadDisplay').textContent = '$' + Math.round(costoPorUnidad).toLocaleString('es-CO');
+    document.getElementById('rendimientoLabel').textContent = rendimiento > 1 ? '(' + rendimiento + ' unid.)' : '';
+    document.getElementById('panelCostos').style.display = totalInsumos > 0 ? 'block' : 'none';
+}
+
+// Recalcular cuando cambia el rendimiento
+document.querySelector('[name="rendimiento"]').addEventListener('input', calcularCostos);
+
+// Recalcular al editar cantidades o selects ya existentes
+document.getElementById('tbodyInsumos').addEventListener('change', calcularCostos);
+document.getElementById('tbodyInsumos').addEventListener('input', calcularCostos);
+
+// Convertir energía antes de enviar
+document.querySelector('form').addEventListener('submit', function() {
+    const e = document.getElementById('costoEnergiaInput');
+    e.value = parseCOP(e.value);
+});
+
+// Calcular al cargar (modo edición)
+document.addEventListener('DOMContentLoaded', calcularCostos);
 </script>
 
 <?php require_once APP_ROOT . '/views/layout/footer.php'; ?>

@@ -41,7 +41,7 @@ class Receta {
 
     public function insumosPorReceta(int $receta_id): array {
         $stmt = $this->db->prepare("
-            SELECT ri.*, i.nombre as insumo_nombre, i.unidad_medida, i.stock as stock_actual
+            SELECT ri.*, i.nombre as insumo_nombre, i.unidad_medida, i.stock as stock_actual, i.costo_unitario
             FROM receta_insumos ri
             JOIN insumos i ON i.id = ri.insumo_id
             WHERE ri.receta_id = :id
@@ -54,8 +54,8 @@ class Receta {
         try {
             $this->db->beginTransaction();
             $stmt = $this->db->prepare("
-                INSERT INTO recetas (producto_id, nombre, descripcion, rendimiento)
-                VALUES (:producto_id, :nombre, :descripcion, :rendimiento)
+                INSERT INTO recetas (producto_id, nombre, descripcion, rendimiento, costo_energia, rentabilidad)
+                VALUES (:producto_id, :nombre, :descripcion, :rendimiento, :costo_energia, :rentabilidad)
             ");
             $stmt->execute($receta);
             $recetaId = (int)$this->db->lastInsertId();
@@ -85,7 +85,7 @@ class Receta {
             $this->db->beginTransaction();
             $receta[':id'] = $id;
             $stmt = $this->db->prepare("
-                UPDATE recetas SET nombre=:nombre, descripcion=:descripcion, rendimiento=:rendimiento
+                UPDATE recetas SET nombre=:nombre, descripcion=:descripcion, rendimiento=:rendimiento, costo_energia=:costo_energia, rentabilidad=:rentabilidad
                 WHERE id=:id
             ");
             $stmt->execute($receta);
