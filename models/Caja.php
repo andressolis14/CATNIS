@@ -51,21 +51,25 @@ class Caja
         $fin = date('Y-m-d H:i:s');
 
         // Ventas Efectivo y Banco en ese periodo
-        $v_ef = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'efectivo' AND fecha BETWEEN ? AND ?");
+        $v_ef = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'efectivo' AND tipo != 'credito' AND fecha BETWEEN ? AND ?");
         $v_ef->execute([$inicio, $fin]);
         $ventas_ef = $v_ef->fetchColumn();
 
-        $v_ba = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'transferencia' AND fecha BETWEEN ? AND ?");
+        $v_ba = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'transferencia' AND tipo != 'credito' AND fecha BETWEEN ? AND ?");
         $v_ba->execute([$inicio, $fin]);
         $ventas_ba = $v_ba->fetchColumn();
 
         // Gastos en ese periodo — separados por método de pago
+        // gastos.fecha es DATE (sin hora), se compara por rango de fechas para no perder gastos del mismo día
+        $inicioDate = date('Y-m-d', strtotime($inicio));
+        $finDate    = date('Y-m-d', strtotime($fin));
+
         $g_ef = $this->db->prepare("SELECT COALESCE(SUM(monto), 0) FROM gastos WHERE metodo_pago = 'efectivo' AND fecha BETWEEN ? AND ?");
-        $g_ef->execute([$inicio, $fin]);
+        $g_ef->execute([$inicioDate, $finDate]);
         $gastos_ef = $g_ef->fetchColumn();
 
         $g_ba = $this->db->prepare("SELECT COALESCE(SUM(monto), 0) FROM gastos WHERE metodo_pago = 'transferencia' AND fecha BETWEEN ? AND ?");
-        $g_ba->execute([$inicio, $fin]);
+        $g_ba->execute([$inicioDate, $finDate]);
         $gastos_ba = $g_ba->fetchColumn();
 
         // Abonos
@@ -185,12 +189,15 @@ class Caja
         $inicio = $s['fecha_apertura'];
         $fin = $s['fecha_cierre'] ?? date('Y-m-d H:i:s');
 
+        $inicioDate = date('Y-m-d', strtotime($inicio));
+        $finDate    = date('Y-m-d', strtotime($fin));
+
         $sql = "
-            (SELECT fecha, 'venta' as tipo, CONCAT('Venta #', id, ' (', metodo_pago, ')') as descripcion, total as monto FROM ventas WHERE fecha BETWEEN :ini1 AND :fin1)
+            (SELECT fecha, 'venta' as tipo, CONCAT('Venta #', id, ' (', metodo_pago, ')') as descripcion, total as monto FROM ventas WHERE tipo != 'credito' AND fecha BETWEEN :ini1 AND :fin1)
             UNION ALL
             (SELECT fecha, 'gasto' as tipo, descripcion, monto FROM gastos WHERE fecha BETWEEN :ini2 AND :fin2)
             UNION ALL
-            (SELECT fecha, 'abono' as tipo, CONCAT('Abono: ', COALESCE(nota, 'Sin Nota')) as descripcion, monto FROM abonos WHERE fecha BETWEEN :ini3 AND :fin3)
+            (SELECT a.fecha, 'abono' as tipo, CONCAT('Abono Venta #', d.venta_id, ' - ', c.nombre) as descripcion, a.monto FROM abonos a JOIN deudas d ON d.id = a.deuda_id JOIN clientes c ON c.id = d.cliente_id WHERE a.fecha BETWEEN :ini3 AND :fin3)
             UNION ALL
             (SELECT fecha, tipo, descripcion, monto FROM caja_movimientos WHERE fecha BETWEEN :ini4 AND :fin4)
             ORDER BY fecha DESC
@@ -200,8 +207,8 @@ class Caja
         $stmt->execute([
             ':ini1' => $inicio,
             ':fin1' => $fin,
-            ':ini2' => $inicio,
-            ':fin2' => $fin,
+            ':ini2' => $inicioDate,
+            ':fin2' => $finDate,
             ':ini3' => $inicio,
             ':fin3' => $fin,
             ':ini4' => $inicio,

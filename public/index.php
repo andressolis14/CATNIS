@@ -110,6 +110,7 @@ $controllerMap = [
     'recetas'     => 'RecetaController',
     'movimientos' => 'MovimientoInsumoController',
     'produccion'  => 'ProduccionController',
+    'catalogoweb' => 'CatalogoWebController',
 ];
 
 if (!array_key_exists($controller, $controllerMap)) {

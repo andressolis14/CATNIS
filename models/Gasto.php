@@ -9,6 +9,11 @@ class Gasto {
 
     public function __construct() {
         $this->db = getDB();
+        $this->db->exec("CREATE TABLE IF NOT EXISTS proveedores (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nombre VARCHAR(200) NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
     }
 
     public function todos(array $filtros = []): array {
@@ -145,12 +150,28 @@ class Gasto {
 
     public function detallesPorGasto(int $id): array {
         $stmt = $this->db->prepare("
-            SELECT d.*, m.codigo as codigo_maestro 
-            FROM detalle_gastos d 
-            LEFT JOIN items_maestro_gastos m ON d.item_maestro_id = m.id 
+            SELECT d.*, m.codigo as codigo_maestro
+            FROM detalle_gastos d
+            LEFT JOIN items_maestro_gastos m ON d.item_maestro_id = m.id
             WHERE d.gasto_id = :id
         ");
         $stmt->execute([':id' => $id]);
         return $stmt->fetchAll();
+    }
+
+    public function buscarProveedores(string $q): array {
+        $stmt = $this->db->prepare("SELECT nombre FROM proveedores WHERE nombre LIKE :q ORDER BY nombre LIMIT 10");
+        $stmt->execute([':q' => '%' . $q . '%']);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function guardarProveedor(string $nombre): void {
+        if (trim($nombre) === '') return;
+        $stmt = $this->db->prepare("INSERT IGNORE INTO proveedores (nombre) VALUES (:nombre)");
+        $stmt->execute([':nombre' => trim($nombre)]);
+    }
+
+    public function todosProveedores(): array {
+        return $this->db->query("SELECT nombre FROM proveedores ORDER BY nombre")->fetchAll(PDO::FETCH_COLUMN);
     }
 }

@@ -10,6 +10,10 @@ require_once APP_ROOT . '/views/layout/header.php';
         <p>Resumen financiero inteligente</p>
     </div>
     <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-primary shadow-sm" style="border-radius:10px; padding:8px 16px; background-color: #3b82f6; border:none;"
+            data-bs-toggle="modal" data-bs-target="#modalTransferir">
+            <i class="fas fa-exchange-alt me-2"></i>Transferir Fondos
+        </button>
         <button class="btn btn-sm btn-success shadow-sm" style="border-radius:10px; padding:8px 16px;"
             data-bs-toggle="modal" data-bs-target="#modalCapital">
             <i class="fas fa-sack-dollar me-2"></i>Inyectar Capital
@@ -323,6 +327,77 @@ require_once APP_ROOT . '/views/layout/header.php';
         </div>
     </div>
 </div>
+
+<!-- Modal Transferir Fondos -->
+<div class="modal fade" id="modalTransferir" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header text-white py-3" style="background-color: #3b82f6;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exchange-alt me-2"></i>Transferir Fondos</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="<?= APP_URL ?>/caja/transferir" method="POST">
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4">Mueve dinero de manera interna entre tu efectivo físico y tu cuenta bancaria.</p>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Origen (Retirar de)</label>
+                            <select name="origen" class="form-select" id="transfer_origen" required>
+                                <option value="" disabled selected>Selecciona origen</option>
+                                <option value="efectivo">Efectivo 💵</option>
+                                <option value="transferencia">Banco/Transferencia 🏦</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Destino (Depositar en)</label>
+                            <select name="destino" class="form-select" id="transfer_destino" required>
+                                <option value="" disabled selected>Selecciona destino</option>
+                                <option value="efectivo">Efectivo 💵</option>
+                                <option value="transferencia">Banco/Transferencia 🏦</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Monto a Transferir ($)</label>
+                        <input type="number" name="monto_transferir" class="form-control" placeholder="0.00" min="0.01" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 py-2 fw-bold" style="border-radius: 10px; background-color: #3b82f6; border:none;">
+                        CONFIRMAR TRANSFERENCIA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pequeño script para evitar que origen y destino sean iguales
+    document.addEventListener('DOMContentLoaded', () => {
+        const selOrigen = document.getElementById('transfer_origen');
+        const selDestino = document.getElementById('transfer_destino');
+
+        selOrigen.addEventListener('change', (e) => {
+            if (e.target.value === 'efectivo') {
+                selDestino.value = 'transferencia';
+            } else if (e.target.value === 'transferencia') {
+                selDestino.value = 'efectivo';
+            }
+        });
+        
+        selDestino.addEventListener('change', (e) => {
+            if (e.target.value === 'efectivo') {
+                selOrigen.value = 'transferencia';
+            } else if (e.target.value === 'transferencia') {
+                selOrigen.value = 'efectivo';
+            }
+        });
+    });
+</script>
 
 <?php
 // Preparar datos para gráfico

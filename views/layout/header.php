@@ -111,6 +111,15 @@
                         </a>
                     </li>
                 <?php endif; ?>
+                <?php if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'admin'): ?>
+                <li class="nav-label">PÁGINA WEB</li>
+                <li>
+                    <a href="<?= APP_URL ?>/catalogoweb"
+                        class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/catalogoweb') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-store"></i> <span>Catálogo Web</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <li class="nav-label">ANÁLISIS</li>
                 <li>
                     <a href="<?= APP_URL ?>/reportes"

@@ -35,12 +35,14 @@ class GastoController {
             $items = $_POST['items'] ?? [];
 
             if (empty($_POST['categoria'])) {
+                $_SESSION['form_data'] = $_POST;
                 $_SESSION['error'] = 'Debes seleccionar una categoría.';
                 header('Location: ' . APP_URL . '/gastos/crear');
                 exit;
             }
 
             if (empty($items)) {
+                $_SESSION['form_data'] = $_POST;
                 $_SESSION['error'] = 'Debes agregar al menos un ítem al gasto.';
                 header('Location: ' . APP_URL . '/gastos/crear');
                 exit;
@@ -70,6 +72,7 @@ class GastoController {
 
             $numeroFactura = trim($_POST['numero_factura'] ?? '');
             if ($numeroFactura !== '' && $this->model->existeFactura($numeroFactura)) {
+                $_SESSION['form_data'] = $_POST;
                 $_SESSION['error'] = "Ya existe un gasto registrado con el N° de factura \"$numeroFactura\". Verifica antes de continuar.";
                 header('Location: ' . APP_URL . '/gastos/crear');
                 exit;
@@ -85,6 +88,9 @@ class GastoController {
                 ':metodo_pago'    => $_POST['metodo_pago'] ?? 'efectivo',
                 ':proveedor'      => trim($_POST['proveedor'] ?? '') ?: null,
             ];
+
+            $provNombre = trim($_POST['proveedor'] ?? '');
+            if ($provNombre !== '') $this->model->guardarProveedor($provNombre);
 
             if ($this->model->crear($datosGasto, $itemsProcesados)) {
                 $_SESSION['exito'] = 'Gasto registrado correctamente. Total: $' . number_format($total, 0, ',', '.');
@@ -140,6 +146,9 @@ class GastoController {
                 ':proveedor'      => trim($_POST['proveedor'] ?? '') ?: null,
             ];
 
+            $provNombre = trim($_POST['proveedor'] ?? '');
+            if ($provNombre !== '') $this->model->guardarProveedor($provNombre);
+
             if ($this->model->actualizar($id, $datosGasto, $itemsProcesados)) {
                 $_SESSION['exito'] = 'Gasto actualizado correctamente.';
             } else {
@@ -174,6 +183,13 @@ class GastoController {
     public function buscarItems(): void {
         header('Content-Type: application/json');
         echo json_encode($this->itemModel->todos());
+        exit;
+    }
+
+    public function buscarProveedores(): void {
+        header('Content-Type: application/json');
+        $q = trim($_GET['q'] ?? '');
+        echo json_encode($this->model->buscarProveedores($q));
         exit;
     }
 

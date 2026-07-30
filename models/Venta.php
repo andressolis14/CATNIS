@@ -125,7 +125,7 @@ class Venta
 
     public function totalPorMetodo(string $inicio, string $fin, string $metodo): float
     {
-        $stmt = $this->db->prepare("SELECT COALESCE(SUM(total),0) FROM ventas WHERE estado='completada' AND metodo_pago=:metodo AND fecha BETWEEN :inicio AND :fin");
+        $stmt = $this->db->prepare("SELECT COALESCE(SUM(total),0) FROM ventas WHERE estado='completada' AND tipo != 'credito' AND metodo_pago=:metodo AND fecha BETWEEN :inicio AND :fin");
         $stmt->execute([':inicio' => $inicio, ':fin' => $fin . ' 23:59:59', ':metodo' => $metodo]);
         return (float) $stmt->fetchColumn();
     }

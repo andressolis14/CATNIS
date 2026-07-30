@@ -257,4 +257,80 @@ class CajaController
         header('Location: ' . APP_URL . '/dashboard');
         exit;
     }
+
+    public function transferir(): void
+    {
+        if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+            $_SESSION['error'] = 'Solo los administradores pueden realizar transferencias de fondos.';
+            header('Location: ' . APP_URL . '/dashboard');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . APP_URL . '/dashboard');
+            exit;
+        }
+
+        $monto = (float) ($_POST['monto_transferir'] ?? 0);
+        $origen = $_POST['origen'] ?? '';
+        $destino = $_POST['destino'] ?? '';
+
+        if ($monto <= 0) {
+            $_SESSION['error'] = 'El monto a transferir debe ser mayor a 0.';
+            header('Location: ' . APP_URL . '/dashboard');
+            exit;
+        }
+
+        if ($origen === $destino) {
+            $_SESSION['error'] = 'El origen y destino de la transferencia no pueden ser iguales.';
+            header('Location: ' . APP_URL . '/dashboard');
+            exit;
+        }
+
+        if (!in_array($origen, ['efectivo', 'transferencia']) || !in_array($destino, ['efectivo', 'transferencia'])) {
+            $_SESSION['error'] = 'Origen o destino inválido.';
+            header('Location: ' . APP_URL . '/dashboard');
+            exit;
+        }
+
+        $fecha = date('Y-m-d H:i:s');
+        $origen_label = $origen === 'efectivo' ? 'Efectivo' : 'Banco/Transferencia';
+        $destino_label = $destino === 'efectivo' ? 'Efectivo' : 'Banco/Transferencia';
+
+        $success = true;
+
+        // 1. Egreso de la cuenta de origen
+        $ok_egreso = $this->caja->crear([
+            'usuario_id' => $_SESSION['usuario_id'],
+            'tipo' => 'egreso',
+            'metodo_pago' => $origen,
+            'monto' => $monto,
+            'descripcion' => 'Transferencia enviada a ' . $destino_label,
+            'fecha' => $fecha
+        ]);
+
+        if (!$ok_egreso) $success = false;
+
+        // 2. Ingreso a la cuenta de destino
+        if ($success) {
+            $ok_ingreso = $this->caja->crear([
+                'usuario_id' => $_SESSION['usuario_id'],
+                'tipo' => 'ingreso',
+                'metodo_pago' => $destino,
+                'monto' => $monto,
+                'descripcion' => 'Transferencia recibida desde ' . $origen_label,
+                'fecha' => $fecha
+            ]);
+            if (!$ok_ingreso) $success = false;
+        }
+
+        if ($success) {
+            $_SESSION['exito'] = 'Transferencia de $' . number_format($monto, 2) . ' realizada correctamente de ' . $origen_label . ' a ' . $destino_label . '.';
+        } else {
+            $_SESSION['error'] = 'Hubo un problema al procesar la transferencia.';
+        }
+
+        header('Location: ' . APP_URL . '/dashboard');
+        exit;
+    }
 }

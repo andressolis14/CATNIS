@@ -2,6 +2,14 @@
 $editando   = isset($gasto);
 $pageTitle  = $editando ? 'Editar Gasto' : 'Nuevo Gasto';
 $categorias = ['servicios', 'compras', 'transporte', 'nomina', 'alquiler', 'prestamos', 'activos', 'otros'];
+
+// Recuperar datos del formulario si hubo un error en el POST anterior
+$fd = [];
+if (!$editando && !empty($_SESSION['form_data'])) {
+    $fd = $_SESSION['form_data'];
+    unset($_SESSION['form_data']);
+}
+
 require_once APP_ROOT . '/views/layout/header.php';
 ?>
 
@@ -11,24 +19,32 @@ require_once APP_ROOT . '/views/layout/header.php';
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-11">
         <div class="form-card">
             <form method="POST" action="<?= $editando ? APP_URL.'/gastos/editar?id='.$gasto['id'] : APP_URL.'/gastos/crear' ?>">
                 <div class="row g-3">
+<?php
+$valFactura   = htmlspecialchars($fd['numero_factura']    ?? $gasto['numero_factura'] ?? '');
+$valFecha     = $fd['fecha']       ?? $gasto['fecha']       ?? date('Y-m-d');
+$valCat       = $fd['categoria']   ?? $gasto['categoria']   ?? '';
+$valMetodo    = $fd['metodo_pago'] ?? $gasto['metodo_pago'] ?? 'efectivo';
+$valProv      = htmlspecialchars($fd['proveedor']          ?? $gasto['proveedor']     ?? '');
+$valDesc      = htmlspecialchars($fd['descripcion_general'] ?? $gasto['descripcion']  ?? '');
+?>
                     <div class="col-md-4">
                         <label class="form-label">N° Factura / Recibo</label>
-                        <input type="text" name="numero_factura" class="form-control" value="<?= htmlspecialchars($gasto['numero_factura'] ?? '') ?>" placeholder="Ej: FAC-001">
+                        <input type="text" name="numero_factura" class="form-control" value="<?= $valFactura ?>" placeholder="Ej: FAC-001">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Fecha *</label>
-                        <input type="date" name="fecha" class="form-control" value="<?= $gasto['fecha'] ?? date('Y-m-d') ?>" required>
+                        <input type="date" name="fecha" class="form-control" value="<?= $valFecha ?>" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Categoría <span style="color:var(--accent)">*</span></label>
                         <select name="categoria" class="form-select" required>
-                            <option value="" <?= !$editando ? 'selected' : '' ?> disabled>— Selecciona una categoría —</option>
+                            <option value="" <?= $valCat === '' ? 'selected' : '' ?> disabled>— Selecciona una categoría —</option>
                             <?php foreach ($categorias as $cat): ?>
-                                <option value="<?= $cat ?>" <?= ($editando && ($gasto['categoria'] ?? '') === $cat) ? 'selected' : '' ?>>
+                                <option value="<?= $cat ?>" <?= $valCat === $cat ? 'selected' : '' ?>>
                                     <?= ucfirst($cat) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -37,20 +53,31 @@ require_once APP_ROOT . '/views/layout/header.php';
                     <div class="col-md-4">
                         <label class="form-label">Pagado con <span style="color:var(--accent)">*</span></label>
                         <select name="metodo_pago" class="form-select">
-                            <option value="efectivo"      <?= ($gasto['metodo_pago'] ?? 'efectivo') === 'efectivo'      ? 'selected' : '' ?>>💵 Efectivo</option>
-                            <option value="transferencia" <?= ($gasto['metodo_pago'] ?? '') === 'transferencia' ? 'selected' : '' ?>>🏦 Transferencia / Banco</option>
-                            <option value="otros"         <?= ($gasto['metodo_pago'] ?? '') === 'otros'         ? 'selected' : '' ?>>📱 Otros</option>
+                            <option value="efectivo"      <?= $valMetodo === 'efectivo'      ? 'selected' : '' ?>>💵 Efectivo</option>
+                            <option value="transferencia" <?= $valMetodo === 'transferencia' ? 'selected' : '' ?>>🏦 Transferencia / Banco</option>
+                            <option value="otros"         <?= $valMetodo === 'otros'         ? 'selected' : '' ?>>📱 Otros</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4" style="position:relative;">
                         <label class="form-label">Proveedor</label>
-                        <input type="text" name="proveedor" class="form-control"
-                               value="<?= htmlspecialchars($gasto['proveedor'] ?? '') ?>"
-                               placeholder="Nombre del proveedor...">
+                        <div style="position:relative;">
+                            <input type="text" id="proveedorSearch" class="form-control" autocomplete="off"
+                                   value="<?= $valProv ?>"
+                                   placeholder="Buscar proveedor..."
+                                   oninput="syncProveedor(this.value); buscarProveedor(this.value)"
+                                   onfocus="buscarProveedor(this.value)"
+                                   onblur="setTimeout(()=>{ document.getElementById('proveedorDropdown').style.display='none'; }, 200)">
+                            <input type="hidden" name="proveedor" id="proveedorHidden"
+                                   value="<?= $valProv ?>">
+                            <div id="proveedorDropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:9999;
+                                 background:var(--card-bg); border:1px solid var(--border); border-radius:10px;
+                                 box-shadow:0 8px 24px rgba(0,0,0,.3); max-height:220px; overflow-y:auto; margin-top:4px;">
+                            </div>
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Descripción General (Opcional)</label>
-                        <input type="text" name="descripcion_general" class="form-control" value="<?= htmlspecialchars($gasto['descripcion'] ?? '') ?>" placeholder="Resumen del gasto...">
+                        <input type="text" name="descripcion_general" class="form-control" value="<?= $valDesc ?>" placeholder="Resumen del gasto...">
                     </div>
 
                     <hr class="my-4" style="opacity:0.1">
@@ -77,15 +104,43 @@ require_once APP_ROOT . '/views/layout/header.php';
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyItems">
-                                    <?php if ($editando && !empty($gasto['detalles'])): ?>
-                                        <?php foreach ($gasto['detalles'] as $i => $det): ?>
+                                    <?php
+                                    $itemsParaRender = [];
+                                    if ($editando && !empty($gasto['detalles'])) {
+                                        foreach ($gasto['detalles'] as $det) {
+                                            $itemsParaRender[] = [
+                                                'codigo'      => $det['codigo_maestro'] ?? '---',
+                                                'descripcion' => $det['descripcion'],
+                                                'unidad'      => $det['unidad_medida'] ?? 'unid',
+                                                'cantidad'    => $det['cantidad'] ?? 1,
+                                                'monto'       => number_format((float)$det['monto'], 2, ',', '.'),
+                                                'subtotal'    => number_format(($det['cantidad'] ?? 1) * (float)$det['monto'], 2, ',', '.'),
+                                            ];
+                                        }
+                                    } elseif (!empty($fd['items'])) {
+                                        foreach ($fd['items'] as $item) {
+                                            $cant  = (float)($item['cantidad'] ?? 1);
+                                            $monto = (float)($item['monto']    ?? 0);
+                                            $itemsParaRender[] = [
+                                                'codigo'      => '',
+                                                'descripcion' => $item['descripcion'] ?? '',
+                                                'unidad'      => $item['unidad_medida'] ?? 'unid',
+                                                'cantidad'    => $cant,
+                                                'monto'       => number_format($monto, 2, ',', '.'),
+                                                'subtotal'    => number_format($cant * $monto, 2, ',', '.'),
+                                            ];
+                                        }
+                                    }
+                                    ?>
+                                    <?php if (!empty($itemsParaRender)): ?>
+                                        <?php foreach ($itemsParaRender as $i => $row): ?>
                                             <tr>
-                                                <td><input type="text" class="form-control form-control-sm" value="<?= htmlspecialchars($det['codigo_maestro'] ?? '---') ?>" readonly style="background:rgba(255,255,255,0.03); border:none; color:var(--accent);"></td>
-                                                <td><input type="text" name="items[<?= $i ?>][descripcion]" class="form-control form-control-sm" value="<?= htmlspecialchars($det['descripcion']) ?>" list="listaItems" required oninput="handleItemInput(this)"></td>
-                                                <td><input type="text" name="items[<?= $i ?>][unidad_medida]" class="form-control form-control-sm unidad-input text-center" value="<?= htmlspecialchars($det['unidad_medida'] ?? 'unid') ?>" placeholder="unid" style="min-width:60px;"></td>
-                                                <td><input type="number" min="0" step="any" name="items[<?= $i ?>][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="<?= $det['cantidad'] ?? 1 ?>" required oninput="calcularTotal()"></td>
-                                                <td><input type="text" name="items[<?= $i ?>][monto]" class="form-control form-control-sm monto-input text-end" value="<?= number_format($det['monto'], 2, ',', '.') ?>" required oninput="handleMontoInput(this)"></td>
-                                                <td><input type="text" class="form-control form-control-sm subtotal-input text-end" value="<?= number_format(($det['cantidad'] ?? 1) * $det['monto'], 2, ',', '.') ?>" readonly style="background:rgba(255,255,255,0.03);border-color:transparent;color:var(--text-muted);font-weight:600;cursor:default;"></td>
+                                                <td><input type="text" class="form-control form-control-sm" value="<?= htmlspecialchars($row['codigo']) ?>" readonly style="background:rgba(255,255,255,0.03); border:none; color:var(--accent);"></td>
+                                                <td><input type="text" name="items[<?= $i ?>][descripcion]" class="form-control form-control-sm" value="<?= htmlspecialchars($row['descripcion']) ?>" list="listaItems" required oninput="handleItemInput(this)"></td>
+                                                <td><input type="text" name="items[<?= $i ?>][unidad_medida]" class="form-control form-control-sm unidad-input text-center" value="<?= htmlspecialchars($row['unidad']) ?>" placeholder="unid" style="min-width:60px;"></td>
+                                                <td><input type="number" min="0" step="any" name="items[<?= $i ?>][cantidad]" class="form-control form-control-sm cantidad-input text-center" value="<?= $row['cantidad'] ?>" required oninput="calcularTotal()"></td>
+                                                <td><input type="text" name="items[<?= $i ?>][monto]" class="form-control form-control-sm monto-input text-end" value="<?= $row['monto'] ?>" required oninput="handleMontoInput(this)"></td>
+                                                <td><input type="text" class="form-control form-control-sm subtotal-input text-end" value="<?= $row['subtotal'] ?>" readonly style="background:rgba(255,255,255,0.03);border-color:transparent;color:var(--text-muted);font-weight:600;cursor:default;"></td>
                                                 <td><button type="button" class="btn-delete-sm" onclick="eliminarFila(this)"><i class="fas fa-trash"></i></button></td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -126,7 +181,7 @@ require_once APP_ROOT . '/views/layout/header.php';
 </div>
 
 <script>
-let filaIdx = <?= $editando ? count($gasto['detalles']) : 1 ?>;
+let filaIdx = <?= count($itemsParaRender) ?: 1 ?>;
 const DRAFT_KEY = 'catnis_gasto_draft';
 
 // Convertir formato colombiano a decimal PHP antes de enviar
@@ -314,6 +369,64 @@ function calcularTotal() {
         if (subInput) subInput.value = '$' + formatCOP(sub);
     });
     document.getElementById('totalGasto').textContent = '$' + formatCOP(total);
+}
+
+// ===== AUTOCOMPLETE PROVEEDOR =====
+let provTimeout = null;
+
+function syncProveedor(val) {
+    document.getElementById('proveedorHidden').value = val;
+}
+
+function buscarProveedor(q) {
+    clearTimeout(provTimeout);
+    provTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`<?= APP_URL ?>/gastos/buscarProveedores?q=${encodeURIComponent(q)}`);
+            if (!res.ok) return;
+            const lista = await res.json();
+            renderProveedorDropdown(lista, q.trim());
+        } catch(e) { console.error('Error proveedores:', e); }
+    }, 200);
+}
+
+function renderProveedorDropdown(lista, q) {
+    const dropdown = document.getElementById('proveedorDropdown');
+    dropdown.innerHTML = '';
+
+    if (lista.length === 0 && q === '') {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    lista.forEach(nombre => {
+        const item = document.createElement('div');
+        item.textContent = nombre;
+        item.style.cssText = 'padding:10px 14px; cursor:pointer; font-size:.9rem; border-bottom:1px solid var(--border);';
+        item.onmousedown = () => seleccionarProveedor(nombre);
+        item.onmouseenter = () => item.style.background = 'var(--hover)';
+        item.onmouseleave = () => item.style.background = '';
+        dropdown.appendChild(item);
+    });
+
+    // Opción crear nuevo
+    if (q !== '' && !lista.map(n => n.toLowerCase()).includes(q.toLowerCase())) {
+        const crear = document.createElement('div');
+        crear.innerHTML = `<i class="fas fa-plus me-2" style="color:var(--accent)"></i>Crear "<strong>${q}</strong>"`;
+        crear.style.cssText = 'padding:10px 14px; cursor:pointer; font-size:.9rem; color:var(--accent);';
+        crear.onmousedown = () => seleccionarProveedor(q);
+        crear.onmouseenter = () => crear.style.background = 'var(--hover)';
+        crear.onmouseleave = () => crear.style.background = '';
+        dropdown.appendChild(crear);
+    }
+
+    dropdown.style.display = (lista.length > 0 || q !== '') ? 'block' : 'none';
+}
+
+function seleccionarProveedor(nombre) {
+    document.getElementById('proveedorSearch').value = nombre;
+    document.getElementById('proveedorHidden').value = nombre;
+    document.getElementById('proveedorDropdown').style.display = 'none';
 }
 
 // Cargar borrador al iniciar
