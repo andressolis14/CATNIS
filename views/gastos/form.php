@@ -27,7 +27,9 @@ require_once APP_ROOT . '/views/layout/header.php';
 $valFactura   = htmlspecialchars($fd['numero_factura']    ?? $gasto['numero_factura'] ?? '');
 $valFecha     = $fd['fecha']       ?? $gasto['fecha']       ?? date('Y-m-d');
 $valCat       = $fd['categoria']   ?? $gasto['categoria']   ?? '';
-$valMetodo    = $fd['metodo_pago'] ?? $gasto['metodo_pago'] ?? 'efectivo';
+$valMetodo    = $fd['metodo_pago']          ?? $gasto['metodo_pago']          ?? 'efectivo';
+$valMontoEf   = $fd['monto_efectivo']      ?? $gasto['monto_efectivo']      ?? '';
+$valMontoTr   = $fd['monto_transferencia'] ?? $gasto['monto_transferencia'] ?? '';
 $valProv      = htmlspecialchars($fd['proveedor']          ?? $gasto['proveedor']     ?? '');
 $valDesc      = htmlspecialchars($fd['descripcion_general'] ?? $gasto['descripcion']  ?? '');
 ?>
@@ -52,11 +54,37 @@ $valDesc      = htmlspecialchars($fd['descripcion_general'] ?? $gasto['descripci
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Pagado con <span style="color:var(--accent)">*</span></label>
-                        <select name="metodo_pago" class="form-select">
+                        <select name="metodo_pago" id="selectMetodoPago" class="form-select" onchange="toggleMixto(this.value)">
                             <option value="efectivo"      <?= $valMetodo === 'efectivo'      ? 'selected' : '' ?>>💵 Efectivo</option>
                             <option value="transferencia" <?= $valMetodo === 'transferencia' ? 'selected' : '' ?>>🏦 Transferencia / Banco</option>
+                            <option value="mixto"         <?= $valMetodo === 'mixto'         ? 'selected' : '' ?>>💱 Pago Mixto</option>
                             <option value="otros"         <?= $valMetodo === 'otros'         ? 'selected' : '' ?>>📱 Otros</option>
                         </select>
+                    </div>
+                    <div class="col-12" id="camposMixto" style="display:<?= $valMetodo === 'mixto' ? 'block' : 'none' ?>;">
+                        <div class="row g-2" style="background:rgba(245,158,11,0.07);border:1px dashed rgba(245,158,11,0.4);border-radius:10px;padding:12px;">
+                            <div class="col-12 mb-1" style="font-size:12px;color:var(--text-muted);font-weight:600;">
+                                <i class="fas fa-info-circle me-1"></i>Indicá cuánto se pagó en cada método (la suma debe dar el total del gasto)
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-size:13px;">💵 Monto en Efectivo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="monto_efectivo" id="campoMontoEf" min="0" step="1"
+                                           class="form-control" placeholder="0"
+                                           value="<?= htmlspecialchars($valMontoEf) ?>">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-size:13px;">🏦 Monto en Transferencia</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="monto_transferencia" id="campoMontoTr" min="0" step="1"
+                                           class="form-control" placeholder="0"
+                                           value="<?= htmlspecialchars($valMontoTr) ?>">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-4" style="position:relative;">
                         <label class="form-label">Proveedor</label>
@@ -446,6 +474,14 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDraft();
     fetchItemsMaestro();
 });
+
+function toggleMixto(val) {
+    document.getElementById('camposMixto').style.display = val === 'mixto' ? 'block' : 'none';
+    if (val !== 'mixto') {
+        document.getElementById('campoMontoEf').value = '';
+        document.getElementById('campoMontoTr').value = '';
+    }
+}
 </script>
 
 <?php require_once APP_ROOT . '/views/layout/footer.php'; ?>

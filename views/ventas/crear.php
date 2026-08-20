@@ -187,7 +187,7 @@ function renderCart() {
                 <span style="font-size:14px;font-weight:700;min-width:20px;text-align:center;">${item.cantidad}</span>
                 <button type="button" onclick="cambiarCantidad(${item.id},1)" style="background:rgba(16,185,129,0.2);color:#10b981;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-weight:bold;">+</button>
                 <div style="min-width:70px;text-align:right;" title="Clic para editar total">
-                    $<input type="number" min="0" step="100"
+                    $<input type="number" min="0" step="1"
                         value="${sub}"
                         onchange="actualizarTotal(${item.id}, this.value)"
                         style="width:65px;background:transparent;border:none;border-bottom:1px dashed var(--accent-green);color:var(--accent-green);font-weight:700;font-size:13px;padding:0 2px;text-align:right;">

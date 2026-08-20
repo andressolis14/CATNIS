@@ -76,4 +76,42 @@ class DeudaController
         header('Location: ' . APP_URL . '/deudas/detalle?id=' . $id);
         exit;
     }
+
+    public function editarAbono(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . APP_URL . '/deudas'); exit;
+        }
+
+        $abonoId = (int)($_POST['abono_id'] ?? 0);
+        $deudaId = (int)($_POST['deuda_id'] ?? 0);
+        $monto   = (float)($_POST['monto'] ?? 0);
+        $metodo  = $_POST['metodo_pago'] ?? 'efectivo';
+        $nota    = trim($_POST['nota'] ?? '');
+
+        if ($monto <= 0) {
+            $_SESSION['error'] = 'El monto debe ser mayor a 0.';
+            header('Location: ' . APP_URL . '/deudas/detalle?id=' . $deudaId); exit;
+        }
+
+        if ($this->model->editarAbono($abonoId, $monto, $metodo, $nota)) {
+            $_SESSION['exito'] = 'Abono actualizado correctamente.';
+        } else {
+            $_SESSION['error'] = 'Error al actualizar el abono.';
+        }
+        header('Location: ' . APP_URL . '/deudas/detalle?id=' . $deudaId);
+        exit;
+    }
+
+    public function eliminarAbono(): void {
+        $abonoId = (int)($_GET['abono_id'] ?? 0);
+        $deudaId = (int)($_GET['deuda_id'] ?? 0);
+
+        if ($this->model->eliminarAbono($abonoId)) {
+            $_SESSION['exito'] = 'Abono eliminado correctamente.';
+        } else {
+            $_SESSION['error'] = 'Error al eliminar el abono.';
+        }
+        header('Location: ' . APP_URL . '/deudas/detalle?id=' . $deudaId);
+        exit;
+    }
 }

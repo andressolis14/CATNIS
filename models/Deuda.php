@@ -66,6 +66,81 @@ class Deuda {
         }
     }
 
+    public function editarAbono(int $abonoId, float $monto, string $metodo_pago, string $nota): bool {
+        try {
+            $this->db->beginTransaction();
+
+            // Obtener deuda_id del abono
+            $stmt = $this->db->prepare("SELECT deuda_id FROM abonos WHERE id = :id");
+            $stmt->execute([':id' => $abonoId]);
+            $row = $stmt->fetch();
+            if (!$row) { $this->db->rollBack(); return false; }
+            $deudaId = (int)$row['deuda_id'];
+
+            // Actualizar el abono
+            $this->db->prepare("UPDATE abonos SET monto = :monto, metodo_pago = :metodo_pago, nota = :nota WHERE id = :id")
+                ->execute([':monto' => $monto, ':metodo_pago' => $metodo_pago, ':nota' => $nota, ':id' => $abonoId]);
+
+            // Recalcular totales de la deuda desde cero (suma real de todos los abonos)
+            $stmtTotal = $this->db->prepare("SELECT total FROM deudas WHERE id = :id");
+            $stmtTotal->execute([':id' => $deudaId]);
+            $totalOriginal = (float)$stmtTotal->fetchColumn();
+
+            $stmtSum = $this->db->prepare("SELECT COALESCE(SUM(monto), 0) FROM abonos WHERE deuda_id = :id");
+            $stmtSum->execute([':id' => $deudaId]);
+            $totalAbonado = (float)$stmtSum->fetchColumn();
+
+            $saldo  = max(0, $totalOriginal - $totalAbonado);
+            $estado = $saldo <= 0 ? 'pagada' : ($totalAbonado > 0 ? 'parcial' : 'pendiente');
+
+            $this->db->prepare("UPDATE deudas SET abonado = :abonado, saldo = :saldo, estado = :estado WHERE id = :id")
+                ->execute([':abonado' => $totalAbonado, ':saldo' => $saldo, ':estado' => $estado, ':id' => $deudaId]);
+
+            $this->db->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            error_log("Error en Deuda::editarAbono: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function eliminarAbono(int $abonoId): bool {
+        try {
+            $this->db->beginTransaction();
+
+            $stmt = $this->db->prepare("SELECT deuda_id FROM abonos WHERE id = :id");
+            $stmt->execute([':id' => $abonoId]);
+            $row = $stmt->fetch();
+            if (!$row) { $this->db->rollBack(); return false; }
+            $deudaId = (int)$row['deuda_id'];
+
+            $this->db->prepare("DELETE FROM abonos WHERE id = :id")->execute([':id' => $abonoId]);
+
+            // Recalcular totales
+            $stmtTotal = $this->db->prepare("SELECT total FROM deudas WHERE id = :id");
+            $stmtTotal->execute([':id' => $deudaId]);
+            $totalOriginal = (float)$stmtTotal->fetchColumn();
+
+            $stmtSum = $this->db->prepare("SELECT COALESCE(SUM(monto), 0) FROM abonos WHERE deuda_id = :id");
+            $stmtSum->execute([':id' => $deudaId]);
+            $totalAbonado = (float)$stmtSum->fetchColumn();
+
+            $saldo  = max(0, $totalOriginal - $totalAbonado);
+            $estado = $saldo <= 0 ? 'pagada' : ($totalAbonado > 0 ? 'parcial' : 'pendiente');
+
+            $this->db->prepare("UPDATE deudas SET abonado = :abonado, saldo = :saldo, estado = :estado WHERE id = :id")
+                ->execute([':abonado' => $totalAbonado, ':saldo' => $saldo, ':estado' => $estado, ':id' => $deudaId]);
+
+            $this->db->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            error_log("Error en Deuda::eliminarAbono: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function abonosPorDeuda(int $deudaId): array {
         $stmt = $this->db->prepare("SELECT * FROM abonos WHERE deuda_id = :id ORDER BY fecha DESC");
         $stmt->execute([':id' => $deudaId]);

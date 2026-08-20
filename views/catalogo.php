@@ -165,16 +165,16 @@
             background: #c6deea; color: #fff; border-color: #c6deea;
         }
         .product-card {
-            background: var(--cream); border-radius: var(--radius); overflow: hidden;
-            box-shadow: var(--shadow); transition: transform .3s, box-shadow .3s;
+            background: transparent; border-radius: 0; overflow: visible;
+            box-shadow: none; transition: transform .3s;
             height: 100%; display: flex; flex-direction: column;
         }
-        .product-card:hover { transform: translateY(-6px); box-shadow: 0 18px 48px rgba(72,21,27,.18); }
-        .p-img-wrap { position: relative; height: 210px; overflow: hidden; background: var(--beige); }
+        .product-card:hover { transform: translateY(-4px); }
+        .p-img-wrap { position: relative; height: 240px; overflow: hidden; background: var(--beige); border-radius: 0; }
         .p-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
-        .product-card:hover .p-img-wrap img { transform: scale(1.06); }
+        .product-card:hover .p-img-wrap img { transform: scale(1.04); }
         .p-img-placeholder {
-            width: 100%; height: 210px; background: var(--beige);
+            width: 100%; height: 240px; background: var(--beige);
             display: flex; align-items: center; justify-content: center;
             font-size: 3.5rem;
         }
@@ -183,19 +183,21 @@
             background: var(--dark); color: var(--cream); font-size: .72rem; font-weight: 700;
             padding: 4px 12px; border-radius: 50px;
         }
-        .p-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
-        .p-name { font-size: 1.25rem; margin-bottom: 5px; color: #7a1522; }
-        .p-desc { font-family: 'Inter', sans-serif; font-size: .84rem; color: #7a1522; line-height: 1.5; flex: 1; margin-bottom: 14px; }
-        .p-footer { display: flex; align-items: center; justify-content: space-between; }
-        .p-price { font-size: 1.4rem; color: #7a1522; }
+        .p-body { padding: 14px 4px 18px; flex: 1; display: flex; flex-direction: column; text-align: center; }
+        .p-category { font-family: 'Inter', sans-serif; font-size: .68rem; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+        .p-name { font-size: 1.05rem; font-weight: 700; color: #7a1522; line-height: 1.35; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .p-stars { color: #f59e0b; font-size: .78rem; letter-spacing: 2px; margin-bottom: 8px; }
+        .p-desc { font-family: 'Inter', sans-serif; font-size: .82rem; color: #7a1522; line-height: 1.5; flex: 1; margin-bottom: 14px; }
+        .p-footer { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 8px; border-top: none; margin-top: auto; }
+        .p-price { font-size: 1.25rem; font-weight: 800; color: #7a1522; font-family: 'Inter', sans-serif; }
         .btn-wa-card {
-            background: var(--dark); color: var(--beige); border: none;
+            background: #7a1522; color: #fff; border: none;
             padding: 8px 16px; border-radius: 10px; font-family: 'Inter', sans-serif;
-            font-size: .85rem; font-weight: 600;
+            font-size: .82rem; font-weight: 600;
             display: flex; align-items: center; gap: 6px;
             text-decoration: none; transition: background .2s;
         }
-        .btn-wa-card:hover { background: var(--primary); color: var(--beige); }
+        .btn-wa-card:hover { background: var(--dark); color: #fff; }
         .empty-products {
             grid-column: 1 / -1; text-align: center;
             padding: 60px 20px; color: var(--primary);
@@ -340,7 +342,8 @@
             .filter-pill { white-space: nowrap; flex-shrink: 0; }
 
             /* Productos 1 columna */
-            .p-img-wrap { height: 190px; }
+            .p-img-wrap { height: 210px; }
+            .p-img-placeholder { height: 210px; }
 
             /* Steps */
             .step-card { padding: 22px 14px; margin-bottom: 16px; }
@@ -384,9 +387,9 @@
             .filter-pill { padding: 6px 14px; font-size: .8rem; }
 
             /* Productos */
-            .p-img-wrap { height: 160px; }
-            .p-name { font-size: 1.05rem; }
-            .p-price { font-size: 1.15rem; }
+            .p-img-wrap { height: 180px; }
+            .p-img-placeholder { height: 180px; }
+            .p-price { font-size: 1.1rem; }
             .p-body { padding: 14px; }
 
             /* Steps */
@@ -474,7 +477,7 @@
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-5">
-                <div class="about-placeholder"></div>
+                <img src="<?= APP_URL ?>/img/about.jpg" alt="Catnis Bakery" style="width:100%;border-radius:16px;object-fit:cover;min-height:380px;">
             </div>
             <div class="col-lg-7">
                 <div class="section-label"><i class="fas fa-paw"></i> Sobre Nosotros</div>
@@ -567,7 +570,7 @@
                     $catClass = $p['cat_id'] ? 'cat-' . $p['cat_id'] : 'sin-cat';
                     $waMsg    = urlencode("🐾 ¡Hola Catnis Bakery! Me interesa *{$p['nombre']}* (\$" . number_format($p['precio'], 0, ',', '.') . "). ¿Está disponible?");
                 ?>
-                <div class="col-md-6 col-lg-4 product-item" data-cat="<?= $catClass ?>">
+                <div class="col-6 col-md-4 col-lg-3 product-item" data-cat="<?= $catClass ?>">
                     <div class="product-card">
                         <?php if ($p['imagen']): ?>
                             <div class="p-img-wrap">
@@ -579,7 +582,9 @@
                             <div class="p-img-placeholder">🐾</div>
                         <?php endif; ?>
                         <div class="p-body">
+                            <div class="p-category"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Catnis Bakery') ?></div>
                             <div class="p-name"><?= htmlspecialchars($p['nombre']) ?></div>
+                            <div class="p-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                             <div class="p-desc"><?= htmlspecialchars($p['descripcion'] ?: 'Delicioso y 100% natural. Hecho con amor para tu peludo.') ?></div>
                             <div class="p-footer">
                                 <div class="p-price">$<?= number_format($p['precio'], 0, ',', '.') ?></div>
@@ -669,10 +674,10 @@
                 <i class="fab fa-whatsapp" style="font-size:1.3rem;"></i>
                 Hacer mi pedido ahora
             </a>
-            <p style="margin-top:14px; color:#7a1522; font-family:'Inter',sans-serif; font-size:15px;">
-                <i class="fas fa-clock me-1"></i>
-                Atención: Virtual: Martes a Sábado 9am – 6pm &nbsp;·&nbsp; Físico: Sábados y Domingo (festivos) 11:30 – 6:30pm
-            </p>
+            <div style="margin-top:14px; color:#7a1522; font-family:'Inter',sans-serif; font-size:14px; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <span><i class="fas fa-clock me-2"></i><strong>Virtual:</strong> Martes a Sábado 9am – 6pm</span>
+                <span style="padding-left:22px;"><strong>Físico:</strong> Sábados y Domingo (festivos) 11:30 – 6:30pm</span>
+            </div>
         </div>
     </div>
 </section>

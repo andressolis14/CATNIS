@@ -51,11 +51,11 @@ class Caja
         $fin = date('Y-m-d H:i:s');
 
         // Ventas Efectivo y Banco en ese periodo
-        $v_ef = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'efectivo' AND tipo != 'credito' AND fecha BETWEEN ? AND ?");
+        $v_ef = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'efectivo' AND tipo != 'credito' AND estado != 'anulada' AND fecha BETWEEN ? AND ?");
         $v_ef->execute([$inicio, $fin]);
         $ventas_ef = $v_ef->fetchColumn();
 
-        $v_ba = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'transferencia' AND tipo != 'credito' AND fecha BETWEEN ? AND ?");
+        $v_ba = $this->db->prepare("SELECT COALESCE(SUM(total), 0) FROM ventas WHERE metodo_pago = 'transferencia' AND tipo != 'credito' AND estado != 'anulada' AND fecha BETWEEN ? AND ?");
         $v_ba->execute([$inicio, $fin]);
         $ventas_ba = $v_ba->fetchColumn();
 
@@ -66,11 +66,18 @@ class Caja
 
         $g_ef = $this->db->prepare("SELECT COALESCE(SUM(monto), 0) FROM gastos WHERE metodo_pago = 'efectivo' AND fecha BETWEEN ? AND ?");
         $g_ef->execute([$inicioDate, $finDate]);
-        $gastos_ef = $g_ef->fetchColumn();
+        $gastos_ef = (float)$g_ef->fetchColumn();
 
         $g_ba = $this->db->prepare("SELECT COALESCE(SUM(monto), 0) FROM gastos WHERE metodo_pago = 'transferencia' AND fecha BETWEEN ? AND ?");
         $g_ba->execute([$inicioDate, $finDate]);
-        $gastos_ba = $g_ba->fetchColumn();
+        $gastos_ba = (float)$g_ba->fetchColumn();
+
+        // Gastos mixtos: sumar cada parte al método correspondiente
+        $g_mix = $this->db->prepare("SELECT COALESCE(SUM(monto_efectivo), 0), COALESCE(SUM(monto_transferencia), 0) FROM gastos WHERE metodo_pago = 'mixto' AND fecha BETWEEN ? AND ?");
+        $g_mix->execute([$inicioDate, $finDate]);
+        $rowMix = $g_mix->fetch(\PDO::FETCH_NUM);
+        $gastos_ef += (float)($rowMix[0] ?? 0);
+        $gastos_ba += (float)($rowMix[1] ?? 0);
 
         // Abonos
         $a_ef = $this->db->prepare("SELECT COALESCE(SUM(monto), 0) FROM abonos WHERE metodo_pago = 'efectivo' AND fecha BETWEEN ? AND ?");
@@ -193,7 +200,7 @@ class Caja
         $finDate    = date('Y-m-d', strtotime($fin));
 
         $sql = "
-            (SELECT fecha, 'venta' as tipo, CONCAT('Venta #', id, ' (', metodo_pago, ')') as descripcion, total as monto FROM ventas WHERE tipo != 'credito' AND fecha BETWEEN :ini1 AND :fin1)
+            (SELECT fecha, 'venta' as tipo, CONCAT('Venta #', id, ' (', metodo_pago, ')') as descripcion, total as monto FROM ventas WHERE tipo != 'credito' AND estado != 'anulada' AND fecha BETWEEN :ini1 AND :fin1)
             UNION ALL
             (SELECT fecha, 'gasto' as tipo, descripcion, monto FROM gastos WHERE fecha BETWEEN :ini2 AND :fin2)
             UNION ALL

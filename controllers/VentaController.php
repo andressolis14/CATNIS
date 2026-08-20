@@ -140,6 +140,34 @@ class VentaController
         require_once APP_ROOT . '/views/ventas/recibo.php';
     }
 
+    public function anular(): void {
+        if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+            $_SESSION['error'] = 'Solo los administradores pueden anular ventas.';
+            header('Location: ' . APP_URL . '/ventas'); exit;
+        }
+        $id = (int)($_GET['id'] ?? 0);
+        if ($this->model->anular($id)) {
+            $_SESSION['exito'] = "Venta #$id anulada. El stock fue restaurado.";
+        } else {
+            $_SESSION['error'] = 'No se pudo anular la venta.';
+        }
+        header('Location: ' . APP_URL . '/ventas'); exit;
+    }
+
+    public function reactivar(): void {
+        if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+            $_SESSION['error'] = 'Solo los administradores pueden reactivar ventas.';
+            header('Location: ' . APP_URL . '/ventas'); exit;
+        }
+        $id = (int)($_GET['id'] ?? 0);
+        if ($this->model->reactivar($id)) {
+            $_SESSION['exito'] = "Venta #$id reactivada correctamente.";
+        } else {
+            $_SESSION['error'] = 'No se pudo reactivar la venta.';
+        }
+        header('Location: ' . APP_URL . '/ventas'); exit;
+    }
+
     public function editar(): void
     {
         if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {

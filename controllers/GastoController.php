@@ -78,15 +78,18 @@ class GastoController {
                 exit;
             }
 
+            $metodo = $_POST['metodo_pago'] ?? 'efectivo';
             $datosGasto = [
-                ':usuario_id'     => $_SESSION['usuario_id'],
-                ':numero_factura' => $numeroFactura,
-                ':monto'          => $total,
-                ':categoria'      => $_POST['categoria'] ?? 'otros',
-                ':fecha'          => $_POST['fecha'] ?? date('Y-m-d'),
-                ':descripcion'    => trim($_POST['descripcion_general'] ?? ''),
-                ':metodo_pago'    => $_POST['metodo_pago'] ?? 'efectivo',
-                ':proveedor'      => trim($_POST['proveedor'] ?? '') ?: null,
+                ':usuario_id'          => $_SESSION['usuario_id'],
+                ':numero_factura'      => $numeroFactura,
+                ':monto'               => $total,
+                ':categoria'           => $_POST['categoria'] ?? 'otros',
+                ':fecha'               => $_POST['fecha'] ?? date('Y-m-d'),
+                ':descripcion'         => trim($_POST['descripcion_general'] ?? ''),
+                ':metodo_pago'         => $metodo,
+                ':monto_efectivo'      => $metodo === 'mixto' ? (float)($_POST['monto_efectivo'] ?? 0) : 0,
+                ':monto_transferencia' => $metodo === 'mixto' ? (float)($_POST['monto_transferencia'] ?? 0) : 0,
+                ':proveedor'           => trim($_POST['proveedor'] ?? '') ?: null,
             ];
 
             $provNombre = trim($_POST['proveedor'] ?? '');
@@ -136,14 +139,17 @@ class GastoController {
                 }
             }
 
+            $metodo = $_POST['metodo_pago'] ?? 'efectivo';
             $datosGasto = [
-                ':numero_factura' => trim($_POST['numero_factura'] ?? ''),
-                ':monto'          => $total,
-                ':categoria'      => $_POST['categoria'] ?? 'otros',
-                ':fecha'          => $_POST['fecha'] ?? date('Y-m-d'),
-                ':descripcion'    => trim($_POST['descripcion_general'] ?? ''),
-                ':metodo_pago'    => $_POST['metodo_pago'] ?? 'efectivo',
-                ':proveedor'      => trim($_POST['proveedor'] ?? '') ?: null,
+                ':numero_factura'      => trim($_POST['numero_factura'] ?? ''),
+                ':monto'               => $total,
+                ':categoria'           => $_POST['categoria'] ?? 'otros',
+                ':fecha'               => $_POST['fecha'] ?? date('Y-m-d'),
+                ':descripcion'         => trim($_POST['descripcion_general'] ?? ''),
+                ':metodo_pago'         => $metodo,
+                ':monto_efectivo'      => $metodo === 'mixto' ? (float)($_POST['monto_efectivo'] ?? 0) : 0,
+                ':monto_transferencia' => $metodo === 'mixto' ? (float)($_POST['monto_transferencia'] ?? 0) : 0,
+                ':proveedor'           => trim($_POST['proveedor'] ?? '') ?: null,
             ];
 
             $provNombre = trim($_POST['proveedor'] ?? '');

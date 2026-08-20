@@ -141,6 +141,68 @@ class Venta
         return $stmt->fetchAll();
     }
 
+    public function anular(int $id): bool {
+        try {
+            // Verificar estado actual antes de intentar cambiar
+            $check = $this->db->prepare("SELECT estado FROM ventas WHERE id = :id");
+            $check->execute([':id' => $id]);
+            $estadoActual = $check->fetchColumn();
+            if ($estadoActual === false || $estadoActual === 'anulada') return false;
+
+            $this->db->beginTransaction();
+
+            $this->db->prepare("UPDATE ventas SET estado = 'anulada' WHERE id = :id")
+                ->execute([':id' => $id]);
+
+            // Restaurar stock de productos (no servicios)
+            $stmtDet = $this->db->prepare("SELECT dv.producto_id, dv.cantidad, p.tipo FROM detalle_ventas dv JOIN productos p ON p.id = dv.producto_id WHERE dv.venta_id = :id");
+            $stmtDet->execute([':id' => $id]);
+            $stmtStock = $this->db->prepare("UPDATE productos SET stock = stock + :cantidad WHERE id = :id");
+            foreach ($stmtDet->fetchAll() as $d) {
+                if (($d['tipo'] ?? 'producto') !== 'servicio')
+                    $stmtStock->execute([':cantidad' => $d['cantidad'], ':id' => $d['producto_id']]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error en Venta::anular: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function reactivar(int $id): bool {
+        try {
+            // Verificar que esté anulada antes de reactivar
+            $check = $this->db->prepare("SELECT estado FROM ventas WHERE id = :id");
+            $check->execute([':id' => $id]);
+            $estadoActual = $check->fetchColumn();
+            if ($estadoActual !== 'anulada') return false;
+
+            $this->db->beginTransaction();
+
+            $this->db->prepare("UPDATE ventas SET estado = 'completada' WHERE id = :id")
+                ->execute([':id' => $id]);
+
+            // Descontar stock de nuevo
+            $stmtDet = $this->db->prepare("SELECT dv.producto_id, dv.cantidad, p.tipo FROM detalle_ventas dv JOIN productos p ON p.id = dv.producto_id WHERE dv.venta_id = :id");
+            $stmtDet->execute([':id' => $id]);
+            $stmtStock = $this->db->prepare("UPDATE productos SET stock = stock - :cantidad WHERE id = :id");
+            foreach ($stmtDet->fetchAll() as $d) {
+                if (($d['tipo'] ?? 'producto') !== 'servicio')
+                    $stmtStock->execute([':cantidad' => $d['cantidad'], ':id' => $d['producto_id']]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error en Venta::reactivar: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function actualizar(int $id, array $ventaData, array $detallesNuevos): bool
     {
         try {
@@ -200,22 +262,27 @@ class Venta
                 }
             }
 
-            // 5. Sincronizar Deuda
-            // Borrar deuda vieja si existía
-            $stmtDeudaDel = $this->db->prepare("DELETE FROM deudas WHERE venta_id = :id");
-            $stmtDeudaDel->execute([':id' => $id]);
+            // 5. Sincronizar Deuda — SIN borrar para no perder abonos existentes
+            $stmtDeudaExist = $this->db->prepare("SELECT id, abonado FROM deudas WHERE venta_id = :id");
+            $stmtDeudaExist->execute([':id' => $id]);
+            $deudaExistente = $stmtDeudaExist->fetch();
 
-            // Si la venta nueva es crédito, crear la deuda
             if ($ventaData[':tipo'] === 'credito' && !empty($ventaData[':cliente_id'])) {
-                $stmtDeuda = $this->db->prepare("INSERT INTO deudas (venta_id, cliente_id, total, saldo, fecha) VALUES (:venta_id, :cliente_id, :total, :saldo, :fecha)");
-                $stmtDeuda->execute([
-                    ':venta_id' => $id,
-                    ':cliente_id' => $ventaData[':cliente_id'],
-                    ':total' => $ventaData[':total'],
-                    ':saldo' => $ventaData[':total'],
-                    ':fecha' => date('Y-m-d', strtotime($ventaData[':fecha'])),
-                ]);
+                $nuevoTotal = (float)$ventaData[':total'];
+                if ($deudaExistente) {
+                    // Actualizar total y recalcular saldo respetando lo ya abonado
+                    $abonado   = (float)$deudaExistente['abonado'];
+                    $nuevoSaldo = max(0, $nuevoTotal - $abonado);
+                    $nuevoEstado = $nuevoSaldo <= 0 ? 'pagada' : ($abonado > 0 ? 'parcial' : 'pendiente');
+                    $this->db->prepare("UPDATE deudas SET total = :total, saldo = :saldo, cliente_id = :cliente_id, estado = :estado WHERE venta_id = :venta_id")
+                        ->execute([':total' => $nuevoTotal, ':saldo' => $nuevoSaldo, ':cliente_id' => $ventaData[':cliente_id'], ':estado' => $nuevoEstado, ':venta_id' => $id]);
+                } else {
+                    // No existía deuda: crearla desde cero
+                    $this->db->prepare("INSERT INTO deudas (venta_id, cliente_id, total, saldo, fecha) VALUES (:venta_id, :cliente_id, :total, :saldo, :fecha)")
+                        ->execute([':venta_id' => $id, ':cliente_id' => $ventaData[':cliente_id'], ':total' => $nuevoTotal, ':saldo' => $nuevoTotal, ':fecha' => date('Y-m-d', strtotime($ventaData[':fecha']))]);
+                }
             }
+            // Si cambió a contado no se toca la deuda para no perder el historial de abonos
 
             $this->db->commit();
             return true;

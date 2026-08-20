@@ -44,11 +44,12 @@ require_once APP_ROOT . '/views/layout/header.php';
                 </thead>
                 <tbody>
                     <?php foreach ($ventas as $v): ?>
-                        <tr>
+                        <?php $anulada = (strtolower(trim($v['estado'] ?? '')) === 'anulada'); ?>
+                        <tr style="<?= $anulada ? 'opacity:0.55;' : '' ?>">
                             <td class="text-dim" data-value="<?= $v['id'] ?>"><?= $v['id'] ?></td>
-                            <td class="text-muted" style="font-size:13px" data-value="<?= $v['fecha'] ?>">
+                            <td class="text-muted" style="font-size:13px;<?= $anulada ? 'text-decoration:line-through;' : '' ?>" data-value="<?= $v['fecha'] ?>">
                                 <?= date('d/m/Y H:i', strtotime($v['fecha'])) ?></td>
-                            <td class="fw-600 text-main"><?= htmlspecialchars($v['cliente_nombre'] ?? 'General') ?></td>
+                            <td class="fw-600 text-main" style="<?= $anulada ? 'text-decoration:line-through;' : '' ?>"><?= htmlspecialchars($v['cliente_nombre'] ?? 'General') ?></td>
                             <td data-value="<?= $v['tipo'] ?>"><span
                                     class="badge-<?= $v['tipo'] ?>"><?= ucfirst($v['tipo'] === 'contado' ? 'Cont.' : 'Créd.') ?></span>
                             </td>
@@ -61,7 +62,7 @@ require_once APP_ROOT . '/views/layout/header.php';
                                     <span class="text-dim" title="Otros"><i class="fas fa-wallet"></i></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="text-end fw-bold text-green" data-value="<?= $v['total'] ?>">
+                            <td class="text-end fw-bold <?= $anulada ? 'text-dim' : 'text-green' ?>" style="<?= $anulada ? 'text-decoration:line-through;' : '' ?>" data-value="<?= $v['total'] ?>">
                                 $<?= number_format($v['total'], 0, ',', '.') ?></td>
                             <td data-value="<?= $v['estado'] ?>"><span
                                     class="badge-<?= $v['estado'] ?>"><?= ucfirst($v['estado']) ?></span></td>
@@ -76,10 +77,23 @@ require_once APP_ROOT . '/views/layout/header.php';
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <?php if ($_SESSION['rol'] === 'admin'): ?>
-                                    <a href="<?= APP_URL ?>/ventas/editar?id=<?= $v['id'] ?>" class="btn-sm-icon ms-1"
-                                        style="background:rgba(16,185,129,0.15);color:var(--accent-green);" title="Editar Venta">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                    <?php if (!$anulada): ?>
+                                        <a href="<?= APP_URL ?>/ventas/editar?id=<?= $v['id'] ?>" class="btn-sm-icon ms-1"
+                                            style="background:rgba(16,185,129,0.15);color:var(--accent-green);" title="Editar Venta">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="<?= APP_URL ?>/ventas/anular?id=<?= $v['id'] ?>" class="btn-sm-icon ms-1"
+                                            style="background:rgba(239,68,68,0.12);color:#ef4444;" title="Anular Venta"
+                                            onclick="return confirm('¿Anular la venta #<?= $v['id'] ?>? El stock será restaurado y no contará en los totales.')">
+                                            <i class="fas fa-ban"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="<?= APP_URL ?>/ventas/reactivar?id=<?= $v['id'] ?>" class="btn-sm-icon ms-1"
+                                            style="background:rgba(16,185,129,0.15);color:var(--accent-green);" title="Quitar anulación"
+                                            onclick="return confirm('¿Reactivar la venta #<?= $v['id'] ?>? Volverá a contar en los totales y se descontará del stock.')">
+                                            <i class="fas fa-undo"></i>
+                                        </a>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -91,6 +105,15 @@ require_once APP_ROOT . '/views/layout/header.php';
 </div>
 
 <style>
+    .badge-anulada {
+        background: rgba(239,68,68,0.12);
+        color: #ef4444;
+        border: 1px solid rgba(239,68,68,0.3);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
     .sortable {
         cursor: pointer;
         transition: background 0.2s;

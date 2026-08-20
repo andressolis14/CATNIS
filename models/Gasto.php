@@ -52,7 +52,7 @@ class Gasto {
         try {
             $this->db->beginTransaction();
 
-            $stmt = $this->db->prepare("INSERT INTO gastos (usuario_id, numero_factura, monto, categoria, fecha, descripcion, metodo_pago, proveedor) VALUES (:usuario_id, :numero_factura, :monto, :categoria, :fecha, :descripcion, :metodo_pago, :proveedor)");
+            $stmt = $this->db->prepare("INSERT INTO gastos (usuario_id, numero_factura, monto, categoria, fecha, descripcion, metodo_pago, monto_efectivo, monto_transferencia, proveedor) VALUES (:usuario_id, :numero_factura, :monto, :categoria, :fecha, :descripcion, :metodo_pago, :monto_efectivo, :monto_transferencia, :proveedor)");
             $stmt->execute($gasto);
             $gastoId = (int)$this->db->lastInsertId();
 
@@ -81,7 +81,7 @@ class Gasto {
         try {
             $this->db->beginTransaction();
 
-            $stmt = $this->db->prepare("UPDATE gastos SET numero_factura=:numero_factura, monto=:monto, categoria=:categoria, fecha=:fecha, descripcion=:descripcion, metodo_pago=:metodo_pago, proveedor=:proveedor WHERE id=:id");
+            $stmt = $this->db->prepare("UPDATE gastos SET numero_factura=:numero_factura, monto=:monto, categoria=:categoria, fecha=:fecha, descripcion=:descripcion, metodo_pago=:metodo_pago, monto_efectivo=:monto_efectivo, monto_transferencia=:monto_transferencia, proveedor=:proveedor WHERE id=:id");
             $gasto[':id'] = $id;
             $stmt->execute($gasto);
 
